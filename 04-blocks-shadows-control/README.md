@@ -10,22 +10,26 @@ who can see which screen, and which button actually stops which race.
 
 - `go build ./...` type-checks all nine subexamples at once.
 - `go run .` is only an orientation; every topic is its own program.
-- Or `make run blocks`, `make run for-range`, … — the chapter Makefile also gives `make list` and `make check`.
+- Or `make run 01-blocks`, `make run 06-for-range`, … — the chapter Makefile also gives `make list` and `make check`.
 - Suggested order for the first pass:
 
 | Order | Run it | What it teaches you |
 | ----- | ------ | ------------------- |
-| 1 | `go run ./blocks` | Blocks nest; inner sees outer, not the reverse |
-| 2 | `go run ./shadowing` | `:=` can silently create a lookalike variable |
-| 3 | `go run ./if-scope` | `if x := ...; cond` keeps temporaries local |
-| 4 | `go run ./for-complete` | The classic `for i := 0; i < n; i++` and its variations |
-| 5 | `go run ./for-while` | The `while` shape, infinite loops, `break`/`continue` |
-| 6 | `go run ./for-range` | The everyday loop over slices, maps, and strings |
-| 7 | `go run ./for-labels` | Steering an *outer* loop from an inner one |
-| 8 | `go run ./switch-cases` | Matching values, blank switches, no fallthrough |
-| 9 | `go run ./goto` | The one rare case where jumping forward reads better |
+| 1 | `go run ./01-blocks` | Blocks nest; inner sees outer, not the reverse |
+| 2 | `go run ./02-shadowing` | `:=` can silently create a lookalike variable |
+| 3 | `go run ./03-if-scope` | `if x := ...; cond` keeps temporaries local |
+| 4 | `go run ./04-for-complete` | The classic `for i := 0; i < n; i++` and its variations |
+| 5 | `go run ./05-for-while` | The `while` shape, infinite loops, `break`/`continue` |
+| 6 | `go run ./06-for-range` | The everyday loop over slices, maps, and strings |
+| 7 | `go run ./07-for-labels` | Steering an *outer* loop from an inner one |
+| 8 | `go run ./08-switch-cases` | Matching values, blank switches, no fallthrough |
+| 9 | `go run ./09-goto` | The one rare case where jumping forward reads better |
 
-## 1. Blocks are rooms with one-way glass (`blocks/`)
+Topics are numbered folders (`01-`, `02-`, …) in reading order, so `ls` alone
+tells a newcomer where to begin. The numbers are the curriculum, not a version.
+Here the numbering simply encodes the table above.
+
+## 1. Blocks are rooms with one-way glass (`01-blocks/`)
 
 Plain English: every pair of braces `{}` is a room. Code inside a room can
 read the whiteboard of every room outside it, but nobody outside can read
@@ -58,7 +62,7 @@ Beginner trap: uncommenting either commented-out line fails with
 the room has been demolished. When a temporary is only needed for three
 lines, a bare block (or a tighter `if` scope) keeps it from leaking.
 
-## 2. Shadowing: the evil twin (`shadowing/`)
+## 2. Shadowing: the evil twin (`02-shadowing/`)
 
 Plain English: if you declare a new variable with the same name as an outer
 one, you get two variables wearing the same jersey. Inside the inner block
@@ -101,7 +105,7 @@ hides the package or builtin for the rest of the block, and `fmt.Println`
 suddenly means "field Println on my string". `go vet` won't save you here;
 a shadowing linter will.
 
-## 3. `if` with its own private clipboard (`if-scope/`)
+## 3. `if` with its own private clipboard (`03-if-scope/`)
 
 Plain English: `if x := ...; condition` creates `x` just for that one
 `if/else` chain. It is visible in every branch and gone afterwards.
@@ -126,7 +130,7 @@ inside a function that already has `cutoff := 6` creates a lookalike for
 one branch. Use the slot only for fresh temporaries, never to smuggle in
 side-effect calls or assignments to existing variables.
 
-## 4. The complete `for`: start, check, step (`for-complete/`)
+## 4. The complete `for`: start, check, step (`04-for-complete/`)
 
 Plain English: `for i := 0; i < 5; i++` is three instructions — set up the
 counter, check before every lap, step after every lap. The setup must use
@@ -151,7 +155,7 @@ You may drop any clause. Hoist the setup when it comes from earlier work
 inside the loop. Rule of thumb: reaching for `break`/`continue` just to
 walk a sub-window means a plain `for` with honest bounds would read better.
 
-## 5. `for` as `while`, `for` as forever (`for-while/`)
+## 5. `for` as `while`, `for` as forever (`05-for-while/`)
 
 Plain English: Go has no `while` keyword — you just leave pieces off.
 Drop setup and step (and the semicolons) and `for speed < 8` *is* while.
@@ -198,7 +202,7 @@ Need do-while ("run at least once")? Write
 `for { work; if !cond { break } }` — note the flipped condition versus
 Java: Go states how to *exit*, Java states how to *stay*.
 
-## 6. `for-range`: the loop you'll use most (`for-range/`)
+## 6. `for-range`: the loop you'll use most (`06-for-range/`)
 
 Plain English: `for i, v := range stints` walks a slice, map, or string and
 hands you position + copy-of-value each lap. It is the default choice for
@@ -238,7 +242,7 @@ Three rules that bite beginners:
    and `v` (selected by the `go` line in `go.mod`), so goroutines started
    in the loop stop sharing one reused pair.
 
-## 7. Labels: steering the outer loop (`for-labels/`)
+## 7. Labels: steering the outer loop (`07-for-labels/`)
 
 Plain English: bare `break`/`continue` steer only the innermost loop. Put a
 name on the outer loop (`outer:`) and `continue outer` / `break laps`
@@ -265,7 +269,7 @@ Style note: `gofmt` indents labels to brace level so they stand out. Labels
 are rare — reaching for one usually means "skip/stop the whole outer job",
 which is exactly when they earn their keep.
 
-## 8. `switch`: matching without falling through (`switch-cases/`)
+## 8. `switch`: matching without falling through (`08-switch-cases/`)
 
 Plain English: unlike C, Go cases never fall through — no `break` needed,
 `fallthrough` is opt-in and best avoided. Group equal outcomes with commas;
@@ -307,7 +311,7 @@ Two label lessons: `break` inside a case exits the *switch*, so label the
 loop (`break laps`) to exit the *race*. And choose by relationship: related
 checks on one idea → `switch`; unrelated tests → `if/else`.
 
-## 9. `goto`: the emergency exit (`goto/`)
+## 9. `goto`: the emergency exit (`09-goto/`)
 
 Plain English: `goto done` jumps forward to a labeled line in the same
 function. It cannot skip a declaration or dive into a block — the compiler
