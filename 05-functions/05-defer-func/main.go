@@ -79,10 +79,10 @@ func main() {
 	// defer func 2
 	// defer func 1
 
-	size, err := fileLen("./defer-func/hello.txt")
+	size, err := fileLen("./05-defer-func/hello.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("size of ./defer-func/hello.txt is: %d bytes", size)
+	fmt.Printf("size of ./05-defer-func/hello.txt is: %d bytes", size)
 
 }

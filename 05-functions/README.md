@@ -11,18 +11,21 @@ hands back a report, and cleans up its station before the next stint.
 
 - `go build ./...` type-checks all five subexamples at once.
 - `go run .` is only an orientation; every topic is its own program.
-- Or use the chapter Makefile: `make run <topic>` (e.g. `make run multiple-returns`); `make list` lists the topics and `make check` runs the gate.
+- Or use the chapter Makefile: `make run <topic>` (e.g. `make run 01-multiple-returns`); `make list` lists the topics and `make check` runs the gate.
 - Suggested order for the first pass:
 
 | Order | Run it | What it teaches you |
 | ----- | ------ | ------------------- |
-| 1 | `go run ./multiple-returns` | Returning `(value, ok)` instead of throwing |
-| 2 | `go run ./named-return-shadowing` | Named results, blank `return`, and `:=` shadows |
-| 3 | `go run ./options-variadic` | No named/optional params: struct options + `...T` |
-| 4 | `go run ./anonymous-closure-func` | Functions as values; closures keep state |
-| 5 | `go run ./defer-func` | `defer` cleanup, last-in-first-out |
+| 1 | `go run ./01-multiple-returns` | Returning `(value, ok)` instead of throwing |
+| 2 | `go run ./02-named-return-shadowing` | Named results, blank `return`, and `:=` shadows |
+| 3 | `go run ./03-options-variadic` | No named/optional params: struct options + `...T` |
+| 4 | `go run ./04-anonymous-closure-func` | Functions as values; closures keep state |
+| 5 | `go run ./05-defer-func` | `defer` cleanup, last-in-first-out |
 
-## 1. Multiple returns: an answer plus a receipt (`multiple-returns/`)
+Topics are numbered folders (`01-`, `02-`, …) in reading order, so `ls` alone
+tells a newcomer where to begin. The numbers are the curriculum, not a version.
+
+## 1. Multiple returns: an answer plus a receipt (`01-multiple-returns/`)
 
 Plain English: a Go function can hand back more than one value, and the language
 leans on that for `(value, ok)` and `(value, error)`. The function returns the
@@ -63,7 +66,7 @@ name, empty email). Ignore `ok` and print `u.Name` anyway and you get a blank
 that looks like data, with no error to warn you. Always look at the second
 value — it is the entire reason the return exists.
 
-## 2. Named returns: labeled crates (`named-return-shadowing/`)
+## 2. Named returns: labeled crates (`02-named-return-shadowing/`)
 
 Plain English: you may name a function's results in its signature. The names
 become zero-valued variables that live in the body, and a bare `return` ships
@@ -105,7 +108,7 @@ Assign to the named result with `=`, and prefer writing the values out
 (`return result, nil`) over a blank `return` that forces the reader to scan
 upward.
 
-## 3. No optional params: a form and a bottomless basket (`options-variadic/`)
+## 3. No optional params: a form and a bottomless basket (`03-options-variadic/`)
 
 Plain English: Go has no named or optional parameters and no overloads. You get
 two substitutes: pass a **struct** whose unfilled fields default to zero values
@@ -152,7 +155,7 @@ parameter, and at the call site you expand an existing slice with `nums...`
 rather than passing it bare. That same `...` rule shows up as
 `append(dst, src...)`.
 
-## 4. Functions as values: reusable machines with a memory (`anonymous-closure-func/`)
+## 4. Functions as values: reusable machines with a memory (`04-anonymous-closure-func/`)
 
 Plain English: a function is a value like an `int`. You can store it in a
 variable, pass it to another function, or return it from one. A **closure** is a
@@ -192,7 +195,7 @@ program prints `2 + 100 -> 102`, `3 + 100 -> 103`, `4 + 100 -> 104`. Second trap
 function values compare only against `nil` — `f == g` will not compile — so use
 `== nil` as the "is this actually set?" guard before calling.
 
-## 5. `defer`: the cleanup that always runs (`defer-func/`)
+## 5. `defer`: the cleanup that always runs (`05-defer-func/`)
 
 Plain English: `defer` schedules a call to run when the surrounding function
 returns — no matter how it returns, normal or early or panicking. Stack several
@@ -217,10 +220,10 @@ func fileLen(fileName string) (int, error) {
 }
 ```
 
-Run against the fixture in this folder, `./defer-func/hello.txt`, it reports the size:
+Run against the fixture in this folder, `./05-defer-func/hello.txt`, it reports the size:
 
 ```text
-size of ./defer-func/hello.txt is: 19 bytes
+size of ./05-defer-func/hello.txt is: 19 bytes
 ```
 
 Stacking five defers shows the order — last deferred, first run:
