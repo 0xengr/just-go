@@ -3,12 +3,12 @@ package main
 import "fmt"
 
 // NOTE: Pointers Indicate Mutable Params
-// * As we know, GO is pass by value language.
+// * As we know, Go is a pass-by-value language.
 // * So, when we pass a variable to a function,
-// * GO passes a copy of its value.
+// * Go passes a copy of its value.
 
 // NOTE: If we want to modify the caller's variable
-// * then we pass pointer to that variable.
+// * then we pass a pointer to that variable.
 
 // NOTE: Example: Passing without pointers
 func updateOne(num int) {
