@@ -57,11 +57,12 @@ fmt.Println("z is nil:", z == nil)
 // BUG: dereferencing z would panic, so it stays commented out:
 // fmt.Println("dereference nil pointer:", *z)
 
-if z == nil {
-	fmt.Println("z is nil, so there is nothing to dereference")
-} else {
-	fmt.Println("dereference z pointer:", *z)
-}
+// The guard that makes the dereference in the else branch safe:
+// if z == nil {
+// 	fmt.Println("z is nil, so there is nothing to dereference")
+// } else {
+// 	fmt.Println("dereference z pointer:", *z)
+// }
 
 intPtr := new(int)
 strPtr := new(string)
@@ -75,7 +76,7 @@ Output:
 
 ```text
 Welcome to pointers
-address of x: 0x85f6cb52070
+address of x: 0x72390bce070
 value at pointerToX: hello
 value of y: hello world
 z is nil: true
@@ -84,7 +85,7 @@ zero values: int=0 str="" bool=false
 ```
 
 Beginner trap: printing a pointer prints the *address*, and that address is
-meaningless to a reader and different on every run. `0x85f6cb52070` tells you
+meaningless to a reader and different on every run. `0x72390bce070` tells you
 nothing; `hello` tells you everything. If you want to see data, dereference
 first. The one-line tell: a pointer printed with `%v` and no `*` in front of it
 is a bug waiting to happen — and the `nil` line is the same trap with the
@@ -135,6 +136,20 @@ outside: 2 Hello {20 Alice}
 before: [1 2 3]
 inside modSlice: [4 4 8 10]
 after: [4 4 8]
+
+========== 3. SLICE REASSIGNMENT ==========
+inside reassignSlice: [100 200 300]
+outside: [1 2 3]
+
+========== 4. MAP ==========
+before: map[1:Alice 2:John]
+inside modMap: map[2:hello 3:goodbye]
+after: map[2:hello 3:goodbye]
+
+========== 5. MAP REASSIGNMENT ==========
+inside reassignMap: map[new:100]
+outside: map[Alice:20]
+outside: map[2:hello 3:goodbye]
 ```
 
 The two halves to read carefully: `i`, `s`, and `p` come back exactly as they
@@ -142,11 +157,18 @@ started, because those parameters were copies. But `after: [4 4 8]` shows the
 caller's slice *was* modified, even though only a copy of the slice value was
 passed — writing to `s[i]` writes through to the shared backing array.
 
+Sections 3 and 5 are the same test for the other half of the story, and both fail
+the way a copy should. `reassignSlice` builds a brand-new slice and `outside` is
+still `[1 2 3]`; `reassignMap` builds a brand-new map and the caller still holds
+the old one. So a reference-typed value is not "shared" in the sense that matters
+here — reassigning it is always local, exactly like an `int`.
+
 Beginner trap: `s = append(s, 10)` inside a function changes only the local
 parameter, so the caller's slice keeps its old length and no `append` result ever
-escapes. Write to the existing elements (`s[i] = v`) and the caller sees it;
-reassign the slice itself and the caller does not. Same map story in reverse:
-`m[k] = v` is visible to the caller, `m = map[...]{}` is not.
+escapes — that is section 2's `after: [4 4 8]` against `inside modSlice:
+[4 4 8 10]`. Write to the existing elements (`s[i] = v`) and the caller sees it;
+reassign the slice itself and the caller does not. Same map story: `m[k] = v` is
+visible to the caller in section 4, while `m = map[...]{}` in section 5 is not.
 
 ## 3. Pointers indicate mutable params (`02-pointers-mutable-params/`)
 
@@ -245,12 +267,31 @@ func appendReturning(nums []int) []int { return append(nums, 40) }
 Output:
 
 ```text
+=== a map entry written inside a function is visible outside ===
 user after setAge: map[age:25]
+so no pointer was needed to change age: 25
+
+=== assigning a new map to the parameter stays local ===
 user after replaceMap: map[age:20]
+
+=== a struct states the contract; a map only suggests it ===
+  name: 
+  email: user@example.com
+  name: mohammad
+  email: user@example.com
+
+=== element writes are shared, length changes are not ===
 after scaleFirst (element write): [100 20 30]
 after appendDiscarding, len unchanged: [100 20 30] len = 3
 after appendReturning and assigning: [100 20 30 40] len = 4
+
+=== a struct by value is still only a shallow copy ===
 caller sees the new label: map[admin:true beta:yes]
+
+=== a map is right when the keys come from the data ===
+  go     3
+  is     2
+  worth  1
 ```
 
 The two halves to read carefully: `setAge` changes the caller's data while
@@ -314,7 +355,15 @@ already have (`&d`) is what costs 8 bytes and allocates nothing.
 - `var p *T` is nil (nothing to read); `new(T)` is never nil but still allocates
   the whole value on the heap.
 - Reference-typed values (slices, maps, channels, pointers) copy the header, not
-  the data — so element writes are shared, and reassignment is not.
+  the data — so element writes are shared, and reassignment is not. Maps and
+  slices are not a break in "everything is a copy"; the handle is what gets
+  copied, and it still points at shared data.
+- A missing map key is a zero value, not an error. `"username"` instead of
+  `"name"` compiles and prints empty; a struct field makes it a build error.
+- A struct passed by value is a shallow copy. Map, slice, pointer, or channel
+  fields inside it are still shared with the caller.
+- `append` hands back a new descriptor. Discard it and the caller's length is
+  unchanged; return it and the caller assigns it.
 - `unsafe` exists for the cases where the type system's guarantees are in your
   way. It is rare, it is not needed for normal Go, and the compiler will not
   save you from it.
