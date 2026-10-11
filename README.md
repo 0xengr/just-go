@@ -13,6 +13,7 @@ I come back to the code.
 | `03-composite-types/`  | Arrays, slices, maps & structs | `cd 03-composite-types && go run .` |
 | `04-blocks-shadows-control/` | Blocks, shadows & control structures | `cd 04-blocks-shadows-control && go run .` |
 | `05-functions/`        | Functions, closures & `defer` | `cd 05-functions && go run .` |
+| `06-pointers/`         | Pointers, nil, `new()` & call by value | `cd 06-pointers && go run .` |
 
 Each chapter: overview in root `main.go`, runnable subtopic in its own folder
 (`go run ./<topic>`), notes in that chapter's `README.md`.
