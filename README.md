@@ -18,6 +18,10 @@ I come back to the code.
 Each chapter: overview in root `main.go`, runnable subtopic in its own folder
 (`go run ./<topic>`), notes in that chapter's `README.md`.
 
+Topic folders are numbered in reading order (`01-`, `02-`, …) within each
+chapter, so `ls` on any chapter shows a newcomer where to begin. Each chapter's
+README has the run-order table with what each topic teaches.
+
 ## Make
 
 Every chapter has the same `Makefile`; it finds the chapter name and its topics
@@ -32,7 +36,7 @@ by itself, so there is nothing to configure.
 | `make test` | `go test ./...` |
 | `make check` | `gofmt` + `go vet` + `go build` for the chapter |
 
-Run them from a chapter folder, e.g. `cd 05-functions && make run multiple-returns`.
+Run them from a chapter folder, e.g. `cd 05-functions && make run 01-multiple-returns`.
 At the repo root, `make list` shows every chapter's topics and `make check` runs
 the gate across all of them; `make -C <chapter> <target>` works too.
 
@@ -59,7 +63,7 @@ Reference notes: `fmt-printing.md` (all 12 `fmt` print functions + verbs).
 
 | Command | What it does | Example |
 | ------- | ------------ | ------- |
-| `go run .` / `go run ./<dir>` | Compile to temp dir and run | `go run .`, `go run ./greet` |
+| `go run .` / `go run ./<dir>` | Compile to temp dir and run | `go run .`, `go run ./01-greet` |
 | `go build ./...` | Compile all packages, check for errors | `go build ./...` |
 | `go vet ./...` | Static checks (printf verbs, dead code, etc.) | `go vet ./...` |
 | `gofmt -l .` | List files needing format (empty = clean) | `gofmt -l .`, `gofmt -w .` |
