@@ -22,6 +22,7 @@ send someone to the house with it.
 | 4 | `go run ./03-pointers-last-resort` | nil, aliasing, and GC work: the reasons to reach for a pointer only on purpose |
 | 5 | `go run ./04-map-slice-diffs` | Why a map or a slice reaches the caller's data with no pointer, and when a struct is the better contract |
 | 6 | `go run ./05-pointer-passing-perf` | What copying a 1 MB struct actually costs, measured |
+| 7 | `go run ./06-slices-as-buffers` | Reusing one byte slice across calls, and the stale-bytes trap |
 
 Topics are numbered folders (`01-`, `02-`, …) in reading order, so `ls` alone
 tells a newcomer where to begin. The numbers are the curriculum, not a version.
@@ -339,106 +340,53 @@ is safe to dereference — but `go build -gcflags=-m` reports `new(Data) escapes
 heap`, so it allocates the entire 1 MB anyway. Taking the address of a value you
 already have (`&d`) is what costs 8 bytes and allocates nothing.
 
-## 3. Pointers indicate mutable params (`pointers-mutable-params/`)
+## 7. Slices as buffers (`06-slices-as-buffers/`)
 
-Plain English: because every argument is a copy, writing to a `*int` parameter
-writes to the *caller's* variable. That is the whole trick — and it stops at the
-variable. A function can change what a pointer points at, but it cannot change
-which variable the caller holds.
+Plain English: a buffer is memory you keep around and write into repeatedly instead
+of allocating a fresh one per operation. The slice header and its backing array are
+the same machinery as `03-slice-aliasing`, pointed at a practical job: hold bytes
+while you read or write them.
 
-Real world: you hand someone a key to a locker. They can put something new inside
-the locker, and you will see it when you open the door. Handing them a *new* key
-does not change which key hangs on your ring — that is a copy of the key, not the
-keyring.
+Real world: a whiteboard you wipe and reuse, not a new sheet per note. The board
+costs one thing and serves every message. The moment you start reading from the
+wrong spot on the board, though, you read yesterday's handwriting instead of
+today's note — which is exactly what happens when a buffer is reused carelessly.
 
 ```go
-func updateOne(num int) { num = 100 }
-func updateTwo(num *int) { *num = 200 }
+buffer := make([]byte, 8)
 
-func failedUpdate(g *int) {
-	x := 10
-	g = &x
+for _, msg := range []string{"Hello", "World"} {
+	n := copy(buffer, msg)
+	fmt.Printf("%q\n", buffer[:n])
 }
 ```
 
 Output:
 
 ```text
-n1:  10
-n2:  200
-f:  <nil>
+"Hello"
+"World"
+"Hello"
+"World"
+len is still 8, and the whole array holds "World\x00\x00\x00"
+Hello Go
+after Reset: reused
+fresh buffer: 32768 bytes, cap 32768
 ```
 
-`n1` stays 10 because the copy was changed. `n2` becomes 200 because the function
-wrote through the address. `f` stays nil: `failedUpdate` reassigned its own copy of
-the pointer, so the caller's `f` never learned about `x`.
+The three lines to read carefully. The loop writes `"Hello"` and then `"World"`
+into the *same* backing array, so the 8 bytes were allocated once and reused twice.
+Then the buffer's own length is still 8 after two copies, because `copy` reports how
+many bytes it wrote without resizing anything — `buffer[:n]` is the honest view.
+`bytes.Buffer` is the stdlib version of the same idea, where `Reset` clears the
+length but keeps the backing array, so reuse costs no new allocation.
 
-Beginner trap: `g = &x` looks like it should connect the caller to the new value.
-It does not — reassigning a parameter is *always* local, pointer or not. If you
-want the caller to end up holding a different pointer, return it: `func swap() *int`.
-
-## 4. Pointers are a last resort (`pointers-last-resort/`)
-
-Plain English: pointers are not the faster or more modern choice. They buy three
-specific things — optionality, shared mutation, and cheap passing of large values —
-and they charge for it in `nil` panics, aliasing that makes code harder to reason
-about, and extra GC bookkeeping.
-
-Real world: a shared spreadsheet is great when the whole team needs to edit the
-same sheet. It is a nightmare when you only needed to read one number. Passing the
-file around (by value) is calmer; sharing it (by pointer) is faster and needs
-rules.
-
-```go
-func updateAge(age int)  { age = 30 }
-func updateAgeTwo(age *int) { *age = 30 }
-```
-
-Output:
-
-```text
-25
-30
-```
-
-The value version cannot reach the caller; the pointer version can. Neither is
-"the Go way" in general — pick per call site.
-
-Beginner trap: a pointer is not automatically cheaper. Copying a small struct is
-both simpler and faster than adding a level of indirection; the perf win only
-starts once the struct is large enough that the copy dominates.
-
-## 5. What passing cost actually is (`pointer-passing-perf/`)
-
-Plain English: passing a 1 MB struct by value copies all 1 MB onto the stack;
-passing a pointer copies one 8-byte address. The file also picks up chapter 1's
-distinction: a nil `*Data` is not a zero `Data`, it is no `Data` at all — and
-`new(Data)` is never nil, but it does allocate the full 1 MB on the heap.
-
-```go
-type Data struct{ Buffer [1_000_000]byte }
-
-func processCopy(d Data)        {} // copies 1 MB
-func processPointerPassing(d *Data) {} // copies 8 bytes
-```
-
-Measured with `go test -bench=. -benchmem ./pointer-passing-perf` on go 1.27.1:
-
-```text
-BenchmarkByValue-4     10846     126240 ns/op   1007620 B/op   1 allocs/op
-BenchmarkByPointer-4   1000000000      0.5125 ns/op         0 B/op   0 allocs/op
-```
-
-Read the *gap*, not the absolute numbers: the by-value figure moved between 126k
-and 424k ns/op across runs on the same machine. And the pointer row sits near zero
-because the compiler inlines `byPointer` and discards the unused result, so it
-measures close to an empty loop — "a million bytes copied" against "nothing copied",
-not a literal 200,000x speedup.
-
-Beginner trap: `new(Data)` looks like the safe alternative to `var p *Data`, and it
-is safe to dereference — but `go build -gcflags=-m` reports `new(Data) escapes to
-heap`, so it allocates the entire 1 MB anyway. Taking the address of a value you
-already have (`&d`) is what costs 8 bytes and allocates nothing.
+Beginner trap: the bytes past `n` are leftovers, not zeros. That
+`"World\x00\x00\x00"` line is the whole lesson in one string — the last three bytes
+are the tail of `"Hello"`. Forget `[:n]` and every short reply arrives padded with
+the previous message. This is the mirror image of `05-slice-emptying`: there,
+reusing the array deliberately hid old values; here, reusing it accidentally leaks
+them into your output.
 
 ## Rules I want to remember
 
@@ -465,6 +413,8 @@ already have (`&d`) is what costs 8 bytes and allocates nothing.
   fields inside it are still shared with the caller.
 - `append` hands back a new descriptor. Discard it and the caller's length is
   unchanged; return it and the caller assigns it.
+- `copy(dst, src)` returns the count it wrote and never resizes `dst`. Bytes past
+  that count are stale, not zero — always read the result as `buf[:n]`.
 - `unsafe` exists for the cases where the type system's guarantees are in your
   way. It is rare, it is not needed for normal Go, and the compiler will not
   save you from it.
