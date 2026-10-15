@@ -20,7 +20,7 @@ run-order table, and one section per topic with the code and its real output.
 
 ## Layout
 
-39 runnable topics across 6 chapters. `Start here` runs the first topic in
+43 runnable topics across 7 chapters. `Start here` runs the first topic in
 reading order; the chapter `README.md` has the full run-order table.
 
 | Dir                          | Chapter                              | Topics | Start here                                          |
@@ -31,6 +31,7 @@ reading order; the chapter `README.md` has the full run-order table.
 | `04-blocks-shadows-control/` | Blocks, shadows & control structures |    9 | `make -C 04-blocks-shadows-control run 01-blocks`   |
 | `05-functions/`              | Functions, closures & `defer`        |    5 | `make -C 05-functions run 01-multiple-returns`      |
 | `06-pointers/`               | Pointers, nil, `new()` & call by value |  6 | `make -C 06-pointers run 01-call-by-value`          |
+| `07-types-and-methods/`      | Types and methods (types + methods)  |  4 | `make -C 07-types-and-methods run 01-user-defined-types` |
 
 Each chapter is its own Go module (`go.mod` naming `github.com/aman-void/just-go/<slug>`)
 with its own overview `main.go` and `README.md`; there is no root module and no
