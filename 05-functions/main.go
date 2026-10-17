@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-// NOTE: Functions in GO
+// NOTE: Functions in Go
 // * 1. Functions are first class values,
 // which means a function can be assigned to a variable,
 // passed as an args or returned from another function.
