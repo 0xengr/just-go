@@ -33,7 +33,7 @@ reading order; the chapter `README.md` has the full run-order table.
 | `06-pointers/`               | Pointers, nil, `new()` & call by value |  6 | `make -C 06-pointers run 01-call-by-value`          |
 | `07-types-and-methods/`      | Types and methods (types + methods)  |  4 | `make -C 07-types-and-methods run 01-user-defined-types` |
 
-Each chapter is its own Go module (`go.mod` naming `github.com/aman-void/just-go/<slug>`)
+Each chapter is its own Go module (`go.mod` naming `github.com/0xengr/just-go/<slug>`)
 with its own overview `main.go` and `README.md`; there is no root module and no
 `go.work`. Chapter 1 is the exception: its overview `main.go` is a runnable hello
 world, the rest are orientation stubs.
