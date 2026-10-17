@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// NOTE: Named return values in GO.
+// NOTE: Named return values in Go.
 // The names are predeclared variables, zero-valued like any other, usable
 // anywhere in the body.
 

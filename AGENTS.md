@@ -45,4 +45,23 @@
 
   Root `README.md` is the index, so a missing Layout row means the chapter is
   effectively invisible to a reader.
+- **Fix the author's prose and code mistakes.** The author writes quickly and the
+  grammar is often broken; the examples are theirs but the errors are not. On
+  every pass over a file they wrote, silently correct:
+  - Grammar and spelling in comments and identifiers: `it's types` → `its types`,
+    `Like most programming language GO also have` → `Like most programming
+    languages, Go also has`, subject/verb agreement, `difference` → `different`.
+  - `GO` → `Go` (the language is not an acronym).
+  - Wrong facts and wrong claims, not just wording. If a comment says something
+    does not compile, verify it does not, and quote the real error. If a comment
+    is wrong about the language, fix it and say so in the commit or review.
+  - Stale output blocks, dead paths, and broken references — re-run the program
+    rather than trusting the old text.
+
+  Fix these **without being asked and without asking first**; do not flag grammar
+  as a question for the author. Keep the author's voice, their variable names, and
+  their example structure — correct the mistakes, do not rewrite their prose into
+  a different voice. Never change what a program *does*; only fix things that are
+  wrong. If a correction is debatable, prefer the plainer phrasing and mention it
+  in the summary rather than leaving a known error in place.
 - Chapters are numbered in learning order: `01-hello-go`, `02-predeclared-types`, `03-composite-types`, …
