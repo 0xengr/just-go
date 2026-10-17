@@ -6,9 +6,28 @@ Original notes on Go's array, slice, map, and struct types.
 
 - `go build ./...` type-checks all eleven subexamples at once.
 - `go run .` is only an orientation; every topic is its own program.
-- In order of how much they explain: `slices`, `slice-aliasing`, `maps`,
-  `structs`, then the rest.
-- Or `make run slices`, `make run maps`, … — `make list` lists the topics and `make check` runs the chapter gate.
+- Or `make run 02-slices`, `make run 06-maps`, … — `make list` lists the topics and `make check` runs the chapter gate.
+- Suggested order for the first pass:
+
+| Order | Run it | What it teaches you |
+| ----- | ------ | ------------------- |
+| 1 | `go run ./01-arrays` | Fixed length is part of the type; assignment copies everything |
+| 2 | `go run ./02-slices` | `len` is what you may index, `cap` is the room left |
+| 3 | `go run ./03-slice-aliasing` | A slice header is a pointer, so every alias shares data |
+| 4 | `go run ./04-slicing` | `a[i:j]` versus `a[i:j:k]`, and what bounds panic |
+| 5 | `go run ./05-slice-emptying` | `len 0`, `nil`, and `[:0]` are three different things |
+| 6 | `go run ./06-maps` | nil maps read but panic on write; order is randomized |
+| 7 | `go run ./07-map-sets` | `map[T]struct{}` occupies no memory |
+| 8 | `go run ./08-map-comparing` | Maps are not comparable; use `maps.Equal` |
+| 9 | `go run ./09-structs` | Structs are values: assignment copies, `==` is structural |
+| 10 | `go run ./10-strings-bytes` | Converting to `[]byte`/`[]rune` always copies |
+| 11 | `go run ./11-array-conversion` | Converting an array to a slice allocates and copies |
+
+Topics are numbered folders (`01-`, `02-`, …) in reading order, so `ls` alone
+tells a newcomer where to begin. The numbers are the curriculum, not a version.
+This replaces the old advice to start with `slices`, `slice-aliasing`, `maps`,
+and `structs`: those are now `02`, `03`, `06`, and `09`, with the supporting
+examples placed around them.
 
 ## Notes
 

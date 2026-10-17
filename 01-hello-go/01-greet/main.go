@@ -1,4 +1,4 @@
-// NOTE: go run ./greet [name]
+// NOTE: go run ./01-greet [name]
 //
 // os.Args[0] holds the program name, so the first real argument is at index 1.
 package main
