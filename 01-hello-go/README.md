@@ -4,7 +4,7 @@ Original notes on the toolchain and module basics.
 
 ## What I ran
 
-- `go mod init github.com/aman-void/just-go/01-hello-go` — one module per chapter.
+- `go mod init github.com/0xengr/just-go/01-hello-go` — one module per chapter.
 - `go run .` — overview; `go run ./greet Ada` and `go run ./toolchain` for subexamples.
 - `make run greet Ada` / `make run toolchain` — the chapter Makefile runs a topic; `make list` lists them.
 - `make check` — gofmt + vet + build; same as `go vet ./...`, `gofmt -l .`, `go build ./...`.
