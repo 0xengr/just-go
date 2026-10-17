@@ -4,7 +4,7 @@
   code without the author's explicit consent. Prepare the work, show the diff or
   staged changes, and wait for approval before touching git state.
 - Root `README.md` is the codebase index + Go tooling reference; each `NN-slug/README.md` holds that chapter's notes.
-- Each `NN-slug/` is an independent Go module with its own `go.mod` (`github.com/aman-void/just-go/<slug>`, Go 1.27). No root `go.mod`, no `go.work`.
+- Each `NN-slug/` is an independent Go module with its own `go.mod` (`github.com/0xengr/just-go/<slug>`, Go 1.27). No root `go.mod`, no `go.work`.
 - Chapter layout: root `main.go` is overview only; each subtopic is a runnable `package main` in its own folder (`go run ./<topic>`). Never add a nested `go.mod`.
 - Every chapter ships an identical `Makefile` (copy it verbatim to new chapters — it derives the chapter name from its folder and the topics from `*/main.go`, so never hand-edit it). Targets: `help`, `list`, `run <topic> [args]`, `new <topic>`, `build`, `vet`, `test`, `fmt`, `check`, `tidy`; `make run <topic> ANIM=0` skips the banner. The root `Makefile` fans `list`/`check` across chapters.
 - New chapters: `NN-kebab-slug/` + `go.mod` + `main.go` overview + topic subfolders + `README.md` notes + the chapter `Makefile`. Keep every example original.
