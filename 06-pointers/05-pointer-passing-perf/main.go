@@ -66,7 +66,7 @@ func main() {
 	d := Data{}
 	processCopy(d)
 
-	// NOTE: Now GO copies the pointer, not the entire struct.
+	// NOTE: Now Go copies the pointer, not the entire struct.
 	processPointerPassing(&d)
 
 	zeroValueVersusNoValue()

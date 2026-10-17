@@ -2,7 +2,7 @@ package main
 
 import "fmt"
 
-// NOTE: Multiple Return values in GO.
+// NOTE: Multiple Return values in Go.
 // * One of the best feature of Go is Multiple return values
 // * You can return more than one values from Go functions
 // * which is not possible in most of the programming languages
