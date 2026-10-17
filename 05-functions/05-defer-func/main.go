@@ -7,12 +7,15 @@ import (
 	"os"
 )
 
-// NOTE: Defer function in GO
-// * when we write programs, it often creates some temporary resources like file or network connections.
-// * And yes that need to be cleaned up.
-// * No matter how many exit points a function has or whether a function completed successfully or not.
-// * In GO, we use `defer` keyword to cleanup.
-// * `defer` is not only attach to cleanup. It runs when all the code inside function completely run.
+// NOTE: Defer function in Go
+// * When we write programs, we often create temporary resources like files or
+// * network connections.
+// * And yes, those need to be cleaned up.
+// * No matter how many exit points a function has, or whether it completed
+// * successfully.
+// * In Go, we use the `defer` keyword to clean up.
+// * `defer` is not attached only to cleanup. It runs when all the code inside
+// * the function has run to completion.
 
 // NOTE: defer function runs in LIFO order
 // Example
@@ -79,10 +82,10 @@ func main() {
 	// defer func 2
 	// defer func 1
 
-	size, err := fileLen("./defer-func/hello.txt")
+	size, err := fileLen("./05-defer-func/hello.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("size of ./defer-func/hello.txt is: %d bytes", size)
+	fmt.Printf("size of ./05-defer-func/hello.txt is: %d bytes", size)
 
 }
