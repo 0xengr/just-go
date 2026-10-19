@@ -418,3 +418,60 @@ them into your output.
 - `unsafe` exists for the cases where the type system's guarantees are in your
   way. It is rare, it is not needed for normal Go, and the compiler will not
   save you from it.
+
+## Exercises
+
+1. **Pointer mutation.** Write `increment(p *int)` that adds 1 to `*p`, and
+   show that the caller's variable changes.
+   *Hint:* `*p++`.
+   <details><summary>Solution</summary>
+
+   ```go
+   func increment(p *int) { *p++ }
+   x := 5
+   increment(&x)
+   fmt.Println(x) // 6
+   ```
+   </details>
+
+2. **Call by value.** Pass a struct to a function that mutates a field, then
+   print the original to prove it is unchanged. Repeat with a pointer.
+   *Hint:* value copy vs `*T`.
+   <details><summary>Solution</summary>
+
+   ```go
+   type Box struct{ N int }
+   func bump(b Box) { b.N++ }
+   func bumpPtr(b *Box) { b.N++ }
+   b := Box{N: 1}
+   bump(b); fmt.Println(b.N)   // 1
+   bumpPtr(&b); fmt.Println(b.N) // 2
+   ```
+   </details>
+
+3. **new() vs nil.** Show that `var p *int` is nil and dereferencing panics,
+   while `p := new(int)` is safe to read (zero value).
+   *Hint:* guard with `if p == nil`.
+   <details><summary>Solution</summary>
+
+   ```go
+   var p *int
+   fmt.Println(p == nil) // true
+   q := new(int)
+   fmt.Println(*q)       // 0
+   ```
+   </details>
+
+4. **Slice append returns.** Demonstrate that discarding `append`'s return
+   leaves the caller's length unchanged.
+   *Hint:* `s = append(s, x)` is required.
+   <details><summary>Solution</summary>
+
+   ```go
+   s := make([]int, 0, 4)
+   _ = append(s, 1) // discarded
+   fmt.Println(len(s)) // 0
+   s = append(s, 1)
+   fmt.Println(len(s)) // 1
+   ```
+   </details>

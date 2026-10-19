@@ -253,6 +253,202 @@ fmt.Println(i)` in a loop prints the value `i` held at that moment. Also remembe
 file open until the whole function returns, so hoist the loop body into its own
 function when that matters.
 
+## Notes
+
+- A function signature is part of its type: `func(int) int` and `func(int, int) int`
+  are different types, and so are `func(int) int` and `func(int) (int, error)`.
+- Named return values are variables, not labels: you can read and assign them, and a
+  bare `return` copies their current values into the result slots.
+- Variadic parameters arrive as a slice, so `len`, `range`, `append`, and slicing
+  all work on them unchanged.
+- A closure outlives the function that created it: the captured variables move to
+  the heap and stay alive as long as the closure does.
+- `defer` arguments are evaluated immediately, but the call itself runs at return
+  time; this is why `defer f.Close()` captures the file handle correctly.
+- `defer` runs even when the function panics, which makes it the right place for
+  cleanup, never for business logic.
+
+## Exercises
+
+Try these before peeking at the collapsible solutions.
+
+1. **Safe division.** Turn `divide(a, b int) int` into
+   `divide(a, b int) (int, error)` that returns `errors.New("division by zero")`
+   when `b == 0`. Write a `main` that calls it with `(10, 2)` and `(10, 0)`
+   and prints both outcomes.
+   *Hint:* check `err != nil` before using the quotient.
+
+   <details>
+   <summary>Solution</summary>
+
+   ```go
+   package main
+
+   import (
+       "errors"
+       "fmt"
+   )
+
+   func divide(a, b int) (int, error) {
+       if b == 0 {
+           return 0, errors.New("division by zero")
+       }
+       return a / b, nil
+   }
+
+   func main() {
+       for _, c := range []struct{ a, b int }{{10, 2}, {10, 0}} {
+           q, err := divide(c.a, c.b)
+           if err != nil {
+               fmt.Println("err:", err)
+               continue
+           }
+           fmt.Println("quotient:", q)
+       }
+   }
+   ```
+
+   Expected output:
+
+   ```text
+   quotient: 5
+   err: division by zero
+   ```
+
+   </details>
+
+2. **fileLen with defer.** Write `fileLen(name string) (int, error)` that opens
+   `name`, defers its `Close`, stats it, and returns the size in bytes (or the
+   error). Print the size of `./05-defer-func/hello.txt`.
+   *Hint:* `os.Open`, `defer f.Close()`, `f.Stat()`.
+
+   <details>
+   <summary>Solution</summary>
+
+   ```go
+   package main
+
+   import (
+       "fmt"
+       "log"
+       "os"
+   )
+
+   func fileLen(name string) (int, error) {
+       f, err := os.Open(name)
+       if err != nil {
+           return 0, err
+       }
+       defer f.Close()
+
+       info, err := f.Stat()
+       if err != nil {
+           return 0, err
+       }
+       return int(info.Size()), nil
+   }
+
+   func main() {
+       size, err := fileLen("./05-defer-func/hello.txt")
+       if err != nil {
+           log.Fatal(err)
+       }
+       fmt.Printf("size is: %d bytes\n", size)
+   }
+   ```
+
+   Expected output:
+
+   ```text
+   size is: 19 bytes
+   ```
+
+   </details>
+
+3. **Prefixer.** Write `prefixer(prefix string) func(string) string` that
+   returns a function prefixing its argument with `prefix + " "`. Test it with
+   `helloPrefix := prefixer("Hello")` and print `helloPrefix("Bob")` and
+   `helloPrefix("Maria")`.
+   *Hint:* the returned function is a closure over `prefix`.
+
+   <details>
+   <summary>Solution</summary>
+
+   ```go
+   package main
+
+   import "fmt"
+
+   func prefixer(prefix string) func(string) string {
+       return func(s string) string {
+           return prefix + " " + s
+       }
+   }
+
+   func main() {
+       helloPrefix := prefixer("Hello")
+       fmt.Println(helloPrefix("Bob"))   // Hello Bob
+       fmt.Println(helloPrefix("Maria")) // Hello Maria
+   }
+   ```
+
+   Expected output:
+
+   ```text
+   Hello Bob
+   Hello Maria
+   ```
+
+   </details>
+
+4. **Name, don't shadow.** The function below always returns 0. Fix it so it
+   returns the halved value, and explain why the original printed the right
+   answer but returned 0.
+
+   ```go
+   func half(n int) (result int) {
+       if result := n / 2; result > 0 {
+           fmt.Println("computed:", result)
+       }
+       return
+   }
+   ```
+
+   *Hint:* `:=` declares a new `result` scoped to the `if`.
+
+   <details>
+   <summary>Solution</summary>
+
+   ```go
+   package main
+
+   import "fmt"
+
+   func half(n int) (result int) {
+       if result = n / 2; result > 0 {
+           fmt.Println("computed:", result)
+       }
+       return
+   }
+
+   func main() {
+       fmt.Println("half(10) ->", half(10))
+   }
+   ```
+
+   Expected output:
+
+   ```text
+   computed: 5
+   half(10) -> 5
+   ```
+
+   The original used `:=`, which declared a *new* `result` living only inside
+   the `if` body. The named return stayed at its zero value, so the bare
+   `return` handed back 0. Assigning with `=` writes to the named result.
+
+   </details>
+
 ## Rules I want to remember
 
 - Return `(value, ok)` / `(value, error)` instead of throwing; check the second
