@@ -4,19 +4,17 @@
 ![Go](https://img.shields.io/badge/Go-1.27-00ADD8?logo=go)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-Learning Go by writing it. Every topic here is a small runnable program, and
+Learn Go by writing it. Every topic here is a small runnable program, and
 each chapter ends with notes in my own words — the bits I want to remember when
 I come back to the code.
 
-Chapters follow the order of *Learning Go* by Jon Bodner (2nd edition), one
-chapter per folder, so each `NN-slug/` can be read on its own.
+Each `NN-slug/` is a self-contained module that can be read on its own.
 
-> **Status:** this repo is a complete beginner guide covering chapters 1–7 of
-> the book (environment, predeclared types, composite types, blocks/control,
-> functions, pointers, types & methods). Chapters 8–16 (interfaces, generics,
-> errors, modules, tooling, concurrency, stdlib, context, testing,
-> reflect/unsafe/cgo) are **not** covered here — read them in the book or add
-> them yourself. Fixes and typos are welcome; see "Contributing" below.
+> **Status:** a beginner guide covering core Go topics through types and
+> methods (environment, predeclared types, composite types, blocks/control,
+> functions, pointers, types & methods). Advanced topics are not covered yet —
+> add them as new chapters following the same layout. Fixes and typos are
+> welcome; see "Contributing" below.
 
 ## Who this is for
 
@@ -51,18 +49,23 @@ Each chapter is a self-contained Go module:
 
 ```
 NN-slug/
-├── go.mod          module path for this chapter
-├── main.go         orientation stub (overview only)
-├── Makefile        same in every chapter, auto-discovers topics
-├── README.md       big idea, run order, notes, traps, cheat sheet, exercises
-└── 01-topic/       a runnable package main
-    └── main.go
+├── go.mod            module path for this chapter
+├── main.go           orientation stub (overview only)
+├── Makefile          same in every chapter, auto-discovers examples
+├── README.md         index: big idea, run order, exercises pointer
+├── notes.md          full chapter notes
+├── examples/         runnable package main folders
+│   └── 01-topic/
+│       └── main.go
+└── exercises/        practice tasks (code only)
+    └── 01-slug/
+        └── main.go
 ```
 
 - Topics are numbered folders (`01-`, `02-`, …) in reading order, so `ls`
   alone tells a newcomer where to begin. The numbers are the curriculum, not a
   version.
-- Every topic is its own `package main`: run it with `go run ./01-topic` or
+- Every topic is its own `package main`: run it with `go run ./examples/01-topic` or
   `make -C NN-slug run 01-topic`.
 - The chapter `README.md` is the notes: read it after running the code.
 - Exercises at the end of each README are for you to try before peeking at the
@@ -107,24 +110,21 @@ Topic folders are numbered in reading order (`01-`, `02-`, …) within each
 chapter, so `ls` on any chapter shows a newcomer where to begin. The numbers are
 the curriculum, not a version.
 
-## What's NOT covered
+## Not yet covered
 
-This repo stops at chapter 7 of *Learning Go*. The book continues with:
+These topics are not in the repo yet; add them as new chapters (`08-...`,
+`09-...`, …) following the existing layout:
 
-| Book chapter | Topic | Where to learn it |
-| ------------ | ----- | ----------------- |
-| 8 | Generics | *Learning Go* ch. 8 |
-| 9 | Errors (sentinels, wrapping, panic/recover) | *Learning Go* ch. 9 |
-| 10 | Modules, packages, imports | *Learning Go* ch. 10 |
-| 11 | Go tooling (goimports, linters, build tags, embed) | *Learning Go* ch. 11 |
-| 12 | Concurrency (goroutines, channels, select) | *Learning Go* ch. 12 |
-| 13 | Standard library (io, time, json, http) | *Learning Go* ch. 13 |
-| 14 | Context | *Learning Go* ch. 14 |
-| 15 | Writing tests | *Learning Go* ch. 15 |
-| 16 | reflect, unsafe, cgo | *Learning Go* ch. 16 |
-
-If you want these in the repo, they are great follow-up PRs — keep the same
-chapter layout and Makefile.
+- Interfaces
+- Generics
+- Errors (sentinels, wrapping, panic/recover)
+- Modules, packages, imports
+- Go tooling (goimports, linters, build tags, embed)
+- Concurrency (goroutines, channels, select)
+- Standard library (io, time, json, http)
+- Context
+- Writing tests
+- reflect, unsafe, cgo
 
 ## Make
 
@@ -204,7 +204,6 @@ terms used across the chapters.
 
 ## Further reading
 
-- *Learning Go* (Jon Bodner, 2nd ed.) — the book this repo follows.
 - [A Tour of Go](https://go.dev/tour/) — interactive intro.
 - [Effective Go](https://go.dev/doc/effective_go) — idioms.
 - [Go by Example](https://gobyexample.com/) — short runnable snippets.
@@ -212,7 +211,7 @@ terms used across the chapters.
 
 ## Contributing
 
-This repo is considered complete as a beginner guide (chapters 1–7). Contributions
+This repo is a beginner guide covering core Go topics through types and methods. Contributions
 that fix typos, correct facts or output, improve notes, or add the missing
 chapters (8–16) following the existing layout are welcome. Please keep each
 chapter a self-contained module with the shared `Makefile`, run `make check`

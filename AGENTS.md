@@ -3,11 +3,26 @@
 - **Git: high strictness.** Never write a commit, create a branch, or push any
   code without the author's explicit consent. Prepare the work, show the diff or
   staged changes, and wait for approval before touching git state.
-- Root `README.md` is the codebase index + Go tooling reference; each `NN-slug/README.md` holds that chapter's notes.
+- Root `README.md` is the codebase index + Go tooling reference; each `NN-slug/README.md` is the chapter index and `NN-slug/notes.md` holds the full notes.
+- **Knowledge map (system of record).** All context lives in the repo:
+  - `README.md` — index and tooling reference
+  - `GLOSSARY.md` — terms
+  - `fmt-printing.md` — fmt reference
+  - `NN-slug/README.md` — chapter index
+  - `NN-slug/notes.md` — full notes
+  - `NN-slug/examples/` — runnable code
+  - `NN-slug/exercises/` — practice tasks
+  - `.opencode/commands/` — custom commands
+- **Progressive disclosure.** Read in this order: `AGENTS.md` → root `README.md` →
+  chapter `README.md` → `notes.md` → `examples/`.
+- **Mechanical checks.** `make check` is the gate; rules must be verifiable, not
+  just documented.
 - Each `NN-slug/` is an independent Go module with its own `go.mod` (`github.com/0xengr/just-go/<slug>`, Go 1.27). No root `go.mod`, no `go.work`.
-- Chapter layout: root `main.go` is overview only; each subtopic is a runnable `package main` in its own folder (`go run ./<topic>`). Never add a nested `go.mod`.
-- Every chapter ships an identical `Makefile` (copy it verbatim to new chapters — it derives the chapter name from its folder and the topics from `*/main.go`, so never hand-edit it). Targets: `help`, `list`, `run <topic> [args]`, `new <topic>`, `build`, `vet`, `test`, `fmt`, `check`, `tidy`; `make run <topic> ANIM=0` skips the banner. The root `Makefile` fans `list`/`check` across chapters.
-- New chapters: `NN-kebab-slug/` + `go.mod` + `main.go` overview + topic subfolders + `README.md` notes + the chapter `Makefile`. Keep every example original.
+- Chapter layout: root `main.go` is overview only; each subtopic is a runnable
+  `package main` under `examples/<topic>/` (`go run ./examples/<topic>`).
+  Exercises live under `exercises/<topic>/`. Never add a nested `go.mod`.
+- Every chapter ships an identical `Makefile` (copy it verbatim to new chapters — it derives the chapter name from its folder and the topics from `examples/*/main.go`, so never hand-edit it). Targets: `help`, `list`, `run <topic> [args]`, `new <topic>`, `build`, `vet`, `test`, `fmt`, `check`, `tidy`; `make run <topic> ANIM=0` skips the banner. The root `Makefile` fans `list`/`check` across chapters.
+- New chapters: `NN-kebab-slug/` + `go.mod` + `main.go` overview + `examples/<topic>/` + `exercises/<topic>/` + `README.md` index + `notes.md` full notes + the chapter `Makefile`. Keep every example original.
 - **Branch layout.** Two kinds of work, two homes:
   - Root-level files (`README.md`, `Makefile`, `fmt-printing.md`) are committed on
     `main`.
@@ -23,10 +38,10 @@
   as context, not as tracked content.
 - Chapter check: `make check` (same as `gofmt -l . && go vet ./... && go build ./...`). Root has no Go code to build.
 - Session CWD defaults to `01-hello-go/`; repo root is its parent `just-go/`. `cd` to the target chapter dir before running Go commands.
-- Chapter `README.md` style (human-friendly notes): big-idea intro first, then a
-  run-order table (`Order | Run it | What it teaches you`), then one section per
-  subtopic with plain-English idea + real-world analogy + short code/output quoted
-  from the actual program + one beginner trap, ending with a rules cheat sheet.
+- Chapter `README.md` is the index (big idea, run order, cheat sheet, exercises
+  pointer); full notes live in `notes.md`. Run-order entries point at
+  `examples/<topic>`. Exercises live under `exercises/<topic>/` (code only); the chapter
+  README.md lists each exercise with the topics it solves.
 - Comment tags (Zed `zed-comment` extension, already installed): tag the **first
   line only** of a comment block; continuation lines stay untagged. Tag meanings:
   `NOTE:` file header + ordinary explanation, `WARNING:` beginner traps, `BUG:`
@@ -37,9 +52,9 @@
 - **Chapter completion gate.** After writing topic code, always ask: *"Is this
   chapter complete, or are you going to write more examples?"* Never assume a
   chapter is done. When the answer is yes:
-  1. Write or update that chapter's `README.md` (style above), covering every
-     subtopic, with output quoted from the actual programs — re-run them rather
-     than trusting earlier output.
+  1. Write or update that chapter's `README.md` (index) and `notes.md`
+     (full notes), covering every subtopic, with output quoted from the
+     actual programs — re-run them rather than trusting earlier output.
   2. Add or update the chapter's row in the root `README.md` Layout table.
   3. Only then treat the chapter as finished.
 
