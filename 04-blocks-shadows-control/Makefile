@@ -25,7 +25,7 @@ SHELL := /bin/sh
 # Identity is derived, never edited: the folder name is the chapter, and every
 # subfolder with a main.go is a runnable topic.
 CHAPTER := $(notdir $(CURDIR))
-TOPICS  := $(patsubst %/main.go,%,$(wildcard */main.go))
+TOPICS  := $(patsubst examples/%/main.go,%,$(wildcard examples/*/main.go))
 
 # `make run defer-func` asks make for two goals: `run` and `defer-func`. The
 # catch-all rule at the bottom swallows the second one; here we read it back.
@@ -60,7 +60,7 @@ help:
 	  '$(C_DIM)' '$(C_RESET)'
 	@printf '  %bchapter%b  %s\n\n' '$(C_BOLD)' '$(C_RESET)' '$(CHAPTER)'
 	@printf '  %busage%b    make <target> [topic]\n\n' '$(C_BOLD)' '$(C_RESET)'
-	@printf '    %brun%b <topic> [args]   go run ./<topic> [args] with the banner\n' '$(C_GREEN)' '$(C_RESET)'
+	@printf '    %brun%b <topic> [args]   go run ./examples/<topic> [args] with the banner\n' '$(C_GREEN)' '$(C_RESET)'
 	@printf '    %bnew%b <topic>   scaffold <topic>/main.go\n' '$(C_GREEN)' '$(C_RESET)'
 	@printf '    %blist%b          list topics in this chapter\n' '$(C_GREEN)' '$(C_RESET)'
 	@printf '    %bbuild%b         go build ./...\n' '$(C_GREEN)' '$(C_RESET)'
@@ -86,7 +86,7 @@ run:
 	  $(MAKE) --no-print-directory list; \
 	  exit 1; \
 	fi
-	@if [ ! -f "$(TOPIC)/main.go" ]; then \
+	@if [ ! -f "examples/$(TOPIC)/main.go" ]; then \
 	  printf '  %bunknown topic:%b %s\n\n' '$(C_RED)' '$(C_RESET)' '$(TOPIC)'; \
 	  $(MAKE) --no-print-directory list; \
 	  exit 1; \
@@ -108,7 +108,7 @@ run:
 	    '$(C_VIOLET)' '$(C_RESET)' '$(C_MAGENTA)' '$(C_RESET)' \
 	    '$(C_YELLOW)' '$(C_RESET)' '$(C_GREEN)' '$(C_RESET)'; \
 	fi
-	@printf '  %bIn chapter %s · running%b %b./%s%b\n\n' \
+	@printf '  %bIn chapter %s · running%b %b./examples/%s%b\n\n' \
 	  '$(C_DIM)' '$(CHAPTER)' '$(C_RESET)' '$(C_CYAN)' '$(TOPIC)' '$(C_RESET)'
 	@if [ "$(ANIM)" = "1" ]; then \
 	  for f in '⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧'; do \
@@ -117,8 +117,8 @@ run:
 	  done; \
 	  printf '\r\033[K'; \
 	fi
-	@go run ./$(TOPIC) $(ARGS) && printf '\n  %b✓ done%b\n' '$(C_GREEN)' '$(C_RESET)' \
-	  || { printf '\n  %b✗ go run ./%s failed%b\n' '$(C_RED)' '$(TOPIC)' '$(C_RESET)'; exit 1; }
+	@go run ./examples/$(TOPIC) $(ARGS) && printf '\n  %b✓ done%b\n' '$(C_GREEN)' '$(C_RESET)' \
+	  || { printf '\n  %b✗ go run ./examples/%s failed%b\n' '$(C_RED)' '$(TOPIC)' '$(C_RESET)'; exit 1; }
 
 # --- scaffold a new topic ---------------------------------------------------
 new:
@@ -126,13 +126,13 @@ new:
 	  printf '  %bno name given%b — try: make new <topic>\n' '$(C_RED)' '$(C_RESET)'; \
 	  exit 1; \
 	fi
-	@if [ -e "$(TOPIC)" ]; then \
+	@if [ -e "examples/$(TOPIC)" ]; then \
 	  printf '  %b%s already exists%b\n' '$(C_RED)' '$(TOPIC)' '$(C_RESET)'; \
 	  exit 1; \
 	fi
-	@mkdir -p "$(TOPIC)"
-	@printf 'package main\n\nimport "fmt"\n\n// NOTE: what this example shows\nfunc main() {\n\tfmt.Println("%s")\n}\n' '$(TOPIC)' > "$(TOPIC)/main.go"
-	@gofmt -w "$(TOPIC)/main.go"
+	@mkdir -p "examples/$(TOPIC)"
+	@printf 'package main\n\nimport "fmt"\n\n// NOTE: what this example shows\nfunc main() {\n\tfmt.Println("%s")\n}\n' '$(TOPIC)' > "examples/$(TOPIC)/main.go"
+	@gofmt -w "examples/$(TOPIC)/main.go"
 	@printf '  %b✓%b created %s/main.go — run it with: make run %s\n' \
 	  '$(C_GREEN)' '$(C_RESET)' '$(TOPIC)' '$(TOPIC)'
 
