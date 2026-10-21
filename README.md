@@ -1,6 +1,5 @@
 # Just Go
 
-[![check](https://github.com/0xengr/just-go/actions/workflows/check.yml/badge.svg)](https://github.com/0xengr/just-go/actions/workflows/check.yml)
 ![Go](https://img.shields.io/badge/Go-1.27-00ADD8?logo=go)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
