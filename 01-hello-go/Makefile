@@ -7,7 +7,7 @@
 #
 #    make                    help (default)
 #    make list               list this chapter's topics
-#    make run <topic> [args]  go run ./<topic> [args], with the animated banner
+#    make run [topic]        run ./main.go (overview) if no topic, else ./examples/<topic>
 #    make new <topic>        scaffold <topic>/main.go
 #    make build              go build ./...
 #    make vet                go vet ./...
@@ -33,6 +33,29 @@ TOPICS  := $(patsubst examples/%/main.go,%,$(wildcard examples/*/main.go))
 # `make run greet Ada` runs `go run ./greet Ada`.
 TOPIC := $(word 2,$(MAKECMDGOALS))
 ARGS  := $(wordlist 3,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+
+# What `make run` executes: a topic under examples/, or the chapter's root
+# main.go (the overview) when no topic / a reserved name is given.
+RUN_TARGET :=
+RUN_LABEL :=
+ifneq ($(TOPIC),)
+  ifneq ($(wildcard examples/$(TOPIC)/main.go),)
+    RUN_TARGET := ./examples/$(TOPIC)
+    RUN_LABEL := $(TOPIC)
+  else
+    ifneq ($(filter main root overview .,$(TOPIC)),)
+      ifneq ($(wildcard main.go),)
+        RUN_TARGET := .
+        RUN_LABEL := main.go
+      endif
+    endif
+  endif
+else
+  ifneq ($(wildcard main.go),)
+    RUN_TARGET := .
+    RUN_LABEL := main.go
+  endif
+endif
 
 # --- ANSI colours -----------------------------------------------------------
 C_RESET   := \033[0m
@@ -60,7 +83,7 @@ help:
 	  '$(C_DIM)' '$(C_RESET)'
 	@printf '  %bchapter%b  %s\n\n' '$(C_BOLD)' '$(C_RESET)' '$(CHAPTER)'
 	@printf '  %busage%b    make <target> [topic]\n\n' '$(C_BOLD)' '$(C_RESET)'
-	@printf '    %brun%b <topic> [args]   go run ./examples/<topic> [args] with the banner\n' '$(C_GREEN)' '$(C_RESET)'
+	@printf '    %brun%b [topic]   run ./main.go (overview) if no topic, else ./examples/<topic>\n' '$(C_GREEN)' '$(C_RESET)'
 	@printf '    %bnew%b <topic>   scaffold <topic>/main.go\n' '$(C_GREEN)' '$(C_RESET)'
 	@printf '    %blist%b          list topics in this chapter\n' '$(C_GREEN)' '$(C_RESET)'
 	@printf '    %bbuild%b         go build ./...\n' '$(C_GREEN)' '$(C_RESET)'
@@ -79,15 +102,14 @@ list:
 	done
 	@printf '\n'
 
-# --- run one topic ----------------------------------------------------------
+# --- run one topic (or the overview) ---------------------------------------
 run:
-	@if [ -z "$(TOPIC)" ]; then \
-	  printf '  %bno topic given%b — try: make run <topic>\n\n' '$(C_RED)' '$(C_RESET)'; \
-	  $(MAKE) --no-print-directory list; \
-	  exit 1; \
-	fi
-	@if [ ! -f "examples/$(TOPIC)/main.go" ]; then \
-	  printf '  %bunknown topic:%b %s\n\n' '$(C_RED)' '$(C_RESET)' '$(TOPIC)'; \
+	@if [ -z "$(RUN_TARGET)" ]; then \
+	  if [ -z "$(TOPIC)" ]; then \
+	    printf '  %bno topic given%b — try: make run <topic> (overview needs a root main.go)\n\n' '$(C_RED)' '$(C_RESET)'; \
+	  else \
+	    printf '  %bunknown topic:%b %s\n\n' '$(C_RED)' '$(C_RESET)' '$(TOPIC)'; \
+	  fi; \
 	  $(MAKE) --no-print-directory list; \
 	  exit 1; \
 	fi
@@ -108,17 +130,17 @@ run:
 	    '$(C_VIOLET)' '$(C_RESET)' '$(C_MAGENTA)' '$(C_RESET)' \
 	    '$(C_YELLOW)' '$(C_RESET)' '$(C_GREEN)' '$(C_RESET)'; \
 	fi
-	@printf '  %bIn chapter %s · running%b %b./examples/%s%b\n\n' \
-	  '$(C_DIM)' '$(CHAPTER)' '$(C_RESET)' '$(C_CYAN)' '$(TOPIC)' '$(C_RESET)'
+	@printf '  %bIn chapter %s · running%b %b%s%b\n\n' \
+	  '$(C_DIM)' '$(CHAPTER)' '$(C_RESET)' '$(C_CYAN)' '$(RUN_TARGET)' '$(C_RESET)'
 	@if [ "$(ANIM)" = "1" ]; then \
 	  for f in '⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧'; do \
-	    printf '\r  %s warming up ./%s …' "$$f" '$(TOPIC)'; \
+	    printf '\r  %s warming up %s …' "$$f" '$(RUN_TARGET)'; \
 	    sleep 0.05; \
 	  done; \
 	  printf '\r\033[K'; \
 	fi
-	@go run ./examples/$(TOPIC) $(ARGS) && printf '\n  %b✓ done%b\n' '$(C_GREEN)' '$(C_RESET)' \
-	  || { printf '\n  %b✗ go run ./examples/%s failed%b\n' '$(C_RED)' '$(TOPIC)' '$(C_RESET)'; exit 1; }
+	@go run $(RUN_TARGET) $(ARGS) && printf '\n  %b✓ done%b\n' '$(C_GREEN)' '$(C_RESET)' \
+	  || { printf '\n  %b✗ go run %s failed%b\n' '$(C_RED)' '$(RUN_TARGET)' '$(C_RESET)'; exit 1; }
 
 # --- scaffold a new topic ---------------------------------------------------
 new:
@@ -175,6 +197,7 @@ $(TOPICS):
 	    '$(C_DIM)' '$@' '$(C_RESET)' '$@'; \
 	  exit 1; \
 	fi
+	@:
 endif
 
 # Swallow `make run defer-func`'s stray second goal, but still complain when an
@@ -184,3 +207,4 @@ endif
 	  printf '  %bunknown target:%b %s — try: make help\n' '$(C_RED)' '$(C_RESET)' '$@'; \
 	  exit 1; \
 	fi
+	@:

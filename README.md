@@ -134,15 +134,17 @@ by itself, so there is nothing to configure.
 | ------------------------- | ----------------------------------------------------------- |
 | `make` / `make help`      | list the targets                                            |
 | `make list`               | list this chapter's topics                                  |
-| `make run <topic> [args]` | `go run ./<topic> [args]`, with a banner (`ANIM=0` to skip) |
+| `make run [topic] [args]` | run `./main.go` (overview) if no topic, else `./examples/<topic>` (`ANIM=0` to skip) |
 | `make new <topic>`        | scaffold `<topic>/main.go`                                  |
 | `make test`               | `go test ./...`                                             |
 | `make check`              | `gofmt` + `vet` + `build` for the chapter                   |
 
 Run them from a chapter folder, e.g. `cd 05-functions && make run 01-multiple-returns`.
 At the repo root, `make list` shows every chapter's topics and `make check` runs
-the gate across all of them; `make -C <chapter> <target>` works too. Add
-`ANIM=0` to skip the banner, e.g. `make run 01-greet Ada ANIM=0`.
+the gate across all of them; `make -C <chapter> <target>` works too. Root-only
+targets: `make run <chapter> [topic] [args]` (runs an overview or a topic) and
+`make new-chapter <name>` (alias `make new <name>`) to scaffold a new chapter.
+Add `ANIM=0` to skip the banner, e.g. `make run 01-greet Ada ANIM=0`.
 
 Reference notes: `fmt-printing.md` — all 12 `fmt` print functions + verbs.
 
