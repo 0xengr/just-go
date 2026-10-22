@@ -46,10 +46,11 @@ help:
 	@printf '  %bmake list%b               chapters and their topics\n' '$(C_GREEN)' '$(C_RESET)'
 	@printf '  %bmake check%b              gofmt + vet + build every chapter\n' '$(C_GREEN)' '$(C_RESET)'
 	@printf '  %bmake run%b <chapter> [topic] [args]\n' '$(C_GREEN)' '$(C_RESET)'
-	@printf '                         run a chapter overview (main.go) or a topic\n' '$(C_DIM)' '$(C_RESET)'
+	@printf '                         run a chapter overview (main.go) or a topic under examples/, exercises/, or a nested path\n' '$(C_DIM)' '$(C_RESET)'
 	@printf '  %bmake new-chapter%b <name>  scaffold a new chapter (alias: make new)\n' '$(C_GREEN)' '$(C_RESET)'
 	@printf '  %bmake -C <chapter> ...%b   any chapter task (run, new, list, check)\n\n' '$(C_GREEN)' '$(C_RESET)'
-	@printf '  %bexample%b  make -C 05-functions run defer-func\n\n' '$(C_DIM)' '$(C_RESET)'
+	@printf '  %bexample%b  make -C 05-functions run defer-func\n' '$(C_DIM)' '$(C_RESET)'
+	@printf '  %bexample%b  make -C 08-interfaces run exercises/duck-typing-2\n\n' '$(C_DIM)' '$(C_RESET)'
 
 list:
 	@for c in $(CHAPTERS); do \

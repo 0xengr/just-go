@@ -75,6 +75,7 @@ NN-slug/
 ```sh
 make -C 03-composite-types run 02-slices          # with animated banner
 make -C 03-composite-types run 02-slices ANIM=0   # skip the banner
+make -C 01-hello-go run exercises/01-name-badge   # run an exercise
 make -C 03-composite-types list                   # list topics
 make -C 03-composite-types check                  # gofmt + vet + build
 make -C 03-composite-types new my-topic           # scaffold a new topic
@@ -134,7 +135,7 @@ by itself, so there is nothing to configure.
 | ------------------------- | ----------------------------------------------------------- |
 | `make` / `make help`      | list the targets                                            |
 | `make list`               | list this chapter's topics                                  |
-| `make run [topic] [args]` | run `./main.go` (overview) if no topic, else `./examples/<topic>` (`ANIM=0` to skip) |
+| `make run [topic] [args]` | run `./main.go` (overview) if no topic, else a topic under `examples/`, `exercises/`, or a nested path (`ANIM=0` to skip) |
 | `make new <topic>`        | scaffold `<topic>/main.go`                                  |
 | `make test`               | `go test ./...`                                             |
 | `make check`              | `gofmt` + `vet` + `build` for the chapter                   |
@@ -189,7 +190,8 @@ Per-chapter check: `gofmt -l . && go vet ./... && go build ./...`.
   into a chapter folder first (`cd 03-composite-types`), then `go run ./02-slices`.
   Or use `make -C 03-composite-types run 02-slices` from anywhere.
 - **"unknown topic"** — topic names are the folder names including the number
-  (`02-slices`, not `slices`).
+  (`02-slices`, not `slices`). Exercises can be run as `exercises/01-...` (or
+  by their bare name when unambiguous), and nested paths are supported too.
 - **`gofmt -l .` lists files** — run `gofmt -w .` (or `make fmt`) and re-check.
 - **`go vet` complains about printf verbs** — fix the format string; vet is
   right more often than you are.

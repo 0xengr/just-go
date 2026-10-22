@@ -21,7 +21,7 @@
 - Chapter layout: root `main.go` is overview only; each subtopic is a runnable
   `package main` under `examples/<topic>/` (`go run ./examples/<topic>`).
   Exercises live under `exercises/<topic>/`. Never add a nested `go.mod`.
-- Every chapter ships an identical `Makefile` (copy it verbatim to new chapters — it derives the chapter name from its folder and the topics from `examples/*/main.go`, so never hand-edit it). Targets: `help`, `list`, `run <topic> [args]`, `new <topic>`, `build`, `vet`, `test`, `fmt`, `check`, `tidy`; `make run <topic> ANIM=0` skips the banner. The root `Makefile` fans `list`/`check` across chapters.
+- Every chapter ships an identical `Makefile` (copy it verbatim to new chapters — it derives the chapter name from its folder and discovers runnable packages under `examples/` and `exercises/`, including nested folders, so never hand-edit it). Targets: `help`, `list`, `run <topic> [args]`, `new <topic>`, `build`, `vet`, `test`, `fmt`, `check`, `tidy`; `make run <topic> ANIM=0` skips the banner. The root `Makefile` fans `list`/`check` across chapters.
 - New chapters: `NN-kebab-slug/` + `go.mod` + `main.go` overview + `examples/<topic>/` + `exercises/<topic>/` + `README.md` index + `notes.md` full notes + the chapter `Makefile`. Keep every example original.
 - **Branch layout.** Two kinds of work, two homes:
   - Root-level files (`README.md`, `Makefile`, `fmt-printing.md`) are committed on
