@@ -7,7 +7,8 @@
 #
 #    make                    help (default)
 #    make list               list this chapter's topics
-#    make run [topic]        run ./main.go (overview) if no topic, else ./examples/<topic>
+#    make run [topic]        run ./main.go (overview) if no topic, else a topic
+#                            under examples/, exercises/, or a nested path
 #    make new <topic>        scaffold <topic>/main.go
 #    make build              go build ./...
 #    make vet                go vet ./...
@@ -26,6 +27,8 @@ SHELL := /bin/sh
 # subfolder with a main.go is a runnable topic.
 CHAPTER := $(notdir $(CURDIR))
 TOPICS  := $(patsubst examples/%/main.go,%,$(wildcard examples/*/main.go))
+# Runnable packages live under examples/ or exercises/, including nested ones.
+RUNNABLES := $(sort $(patsubst %/main.go,%,$(shell find examples exercises -type f -name main.go 2>/dev/null)))
 
 # `make run defer-func` asks make for two goals: `run` and `defer-func`. The
 # catch-all rule at the bottom swallows the second one; here we read it back.
@@ -34,15 +37,29 @@ TOPICS  := $(patsubst examples/%/main.go,%,$(wildcard examples/*/main.go))
 TOPIC := $(word 2,$(MAKECMDGOALS))
 ARGS  := $(wordlist 3,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 
-# What `make run` executes: a topic under examples/, or the chapter's root
-# main.go (the overview) when no topic / a reserved name is given.
+# What `make run` executes: a topic under examples/, exercises/, or a direct
+# relative path; or the chapter's root main.go (the overview) when no topic /
+# a reserved name is given.
 RUN_TARGET :=
 RUN_LABEL :=
 ifneq ($(TOPIC),)
-  ifneq ($(wildcard examples/$(TOPIC)/main.go),)
-    RUN_TARGET := ./examples/$(TOPIC)
+  ifneq ($(wildcard $(TOPIC)/main.go),)
+    RUN_TARGET := ./$(TOPIC)
     RUN_LABEL := $(TOPIC)
-  else
+  endif
+  ifeq ($(RUN_TARGET),)
+    ifneq ($(wildcard examples/$(TOPIC)/main.go),)
+      RUN_TARGET := ./examples/$(TOPIC)
+      RUN_LABEL := $(TOPIC)
+    endif
+  endif
+  ifeq ($(RUN_TARGET),)
+    ifneq ($(wildcard exercises/$(TOPIC)/main.go),)
+      RUN_TARGET := ./exercises/$(TOPIC)
+      RUN_LABEL := $(TOPIC)
+    endif
+  endif
+  ifeq ($(RUN_TARGET),)
     ifneq ($(filter main root overview .,$(TOPIC)),)
       ifneq ($(wildcard main.go),)
         RUN_TARGET := .
@@ -55,6 +72,14 @@ else
     RUN_TARGET := .
     RUN_LABEL := main.go
   endif
+endif
+
+# New topic scaffolding defaults to examples/ unless an examples/ or exercises/
+# prefix is given explicitly.
+ifeq ($(filter examples/% exercises/%,$(TOPIC)),)
+  NEW_PATH := examples/$(TOPIC)
+else
+  NEW_PATH := $(TOPIC)
 endif
 
 # --- ANSI colours -----------------------------------------------------------
@@ -71,7 +96,7 @@ C_RED     := \033[38;5;203m
 
 ANIM ?= 1
 
-.PHONY: help list run new build vet test fmt fmt-check check tidy $(TOPICS)
+.PHONY: help list run new build vet test fmt fmt-check check tidy $(TOPICS) $(RUNNABLES)
 
 # --- help (default) ---------------------------------------------------------
 help:
@@ -83,8 +108,8 @@ help:
 	  '$(C_DIM)' '$(C_RESET)'
 	@printf '  %bchapter%b  %s\n\n' '$(C_BOLD)' '$(C_RESET)' '$(CHAPTER)'
 	@printf '  %busage%b    make <target> [topic]\n\n' '$(C_BOLD)' '$(C_RESET)'
-	@printf '    %brun%b [topic]   run ./main.go (overview) if no topic, else ./examples/<topic>\n' '$(C_GREEN)' '$(C_RESET)'
-	@printf '    %bnew%b <topic>   scaffold <topic>/main.go\n' '$(C_GREEN)' '$(C_RESET)'
+	@printf '    %brun%b [topic]   run ./main.go (overview) if no topic, else a topic under examples/, exercises/, or a nested path\n' '$(C_GREEN)' '$(C_RESET)'
+	@printf '    %bnew%b <topic>   scaffold <topic>/main.go (defaults to examples/)\n' '$(C_GREEN)' '$(C_RESET)'
 	@printf '    %blist%b          list topics in this chapter\n' '$(C_GREEN)' '$(C_RESET)'
 	@printf '    %bbuild%b         go build ./...\n' '$(C_GREEN)' '$(C_RESET)'
 	@printf '    %bvet%b           go vet ./...\n' '$(C_GREEN)' '$(C_RESET)'
@@ -96,9 +121,14 @@ help:
 
 # --- list topics ------------------------------------------------------------
 list:
-	@printf '  %btopics in %s%b\n' '$(C_BOLD)' '$(CHAPTER)' '$(C_RESET)'
-	@for t in $(TOPICS); do \
-	  printf '    %b·%b %s\n' '$(C_GREEN)' '$(C_RESET)' "$$t"; \
+	@printf '  %btopics in %s%b\n\n' '$(C_BOLD)' '$(CHAPTER)' '$(C_RESET)'
+	@printf '  %bexamples%b\n' '$(C_BOLD)' '$(C_RESET)'
+	@for t in $(RUNNABLES); do \
+	  case "$$t" in examples/*) printf '    %s\n' "$$t";; esac; \
+	done
+	@printf '  %bexercises%b\n' '$(C_BOLD)' '$(C_RESET)'
+	@for t in $(RUNNABLES); do \
+	  case "$$t" in exercises/*) printf '    %s\n' "$$t";; esac; \
 	done
 	@printf '\n'
 
@@ -148,15 +178,15 @@ new:
 	  printf '  %bno name given%b — try: make new <topic>\n' '$(C_RED)' '$(C_RESET)'; \
 	  exit 1; \
 	fi
-	@if [ -e "examples/$(TOPIC)" ]; then \
-	  printf '  %b%s already exists%b\n' '$(C_RED)' '$(TOPIC)' '$(C_RESET)'; \
+	@if [ -e "$(NEW_PATH)" ]; then \
+	  printf '  %b%s already exists%b\n' '$(C_RED)' '$(NEW_PATH)' '$(C_RESET)'; \
 	  exit 1; \
 	fi
-	@mkdir -p "examples/$(TOPIC)"
-	@printf 'package main\n\nimport "fmt"\n\n// NOTE: what this example shows\nfunc main() {\n\tfmt.Println("%s")\n}\n' '$(TOPIC)' > "examples/$(TOPIC)/main.go"
-	@gofmt -w "examples/$(TOPIC)/main.go"
+	@mkdir -p "$(NEW_PATH)"
+	@printf 'package main\n\nimport "fmt"\n\n// NOTE: what this example shows\nfunc main() {\n\tfmt.Println("%s")\n}\n' '$(TOPIC)' > "$(NEW_PATH)/main.go"
+	@gofmt -w "$(NEW_PATH)/main.go"
 	@printf '  %b✓%b created %s/main.go — run it with: make run %s\n' \
-	  '$(C_GREEN)' '$(C_RESET)' '$(TOPIC)' '$(TOPIC)'
+	  '$(C_GREEN)' '$(C_RESET)' '$(NEW_PATH)' '$(NEW_PATH)'
 
 # --- checks and chores ------------------------------------------------------
 build:
@@ -192,6 +222,18 @@ tidy:
 # still points you at `make run <topic>`.
 ifneq ($(TOPICS),)
 $(TOPICS):
+	@if [ "$(MAKECMDGOALS)" = "$@" ]; then \
+	  printf '  %b%s is a topic, not a target%b — try: make run %s\n' \
+	    '$(C_DIM)' '$@' '$(C_RESET)' '$@'; \
+	  exit 1; \
+	fi
+	@:
+endif
+
+# Same treatment for runnable paths under examples/ and exercises/, including
+# nested ones, so make does not mistake them for files or directories.
+ifneq ($(RUNNABLES),)
+$(RUNNABLES):
 	@if [ "$(MAKECMDGOALS)" = "$@" ]; then \
 	  printf '  %b%s is a topic, not a target%b — try: make run %s\n' \
 	    '$(C_DIM)' '$@' '$(C_RESET)' '$@'; \
