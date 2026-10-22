@@ -1,3 +1,5 @@
 # Local reference PDF, never committed.
 *.pdf
-.commandcode/
+
+# Keep project commands in git; taste learnings stay local.
+.commandcode/taste/
