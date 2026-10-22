@@ -1,6 +1,7 @@
 ---
 description: Review current changes for bugs, missing tests, and Go idioms
 agent: plan
+subagent: true
 ---
 
 Review $ARGUMENTS (or the diff below) for correctness, missing tests, and Go idioms. Report bugs first, then gaps, then nits.

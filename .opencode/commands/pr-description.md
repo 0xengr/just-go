@@ -1,6 +1,7 @@
 ---
 description: Draft a PR description from branch changes
 agent: plan
+subagent: true
 ---
 
 Draft a PR description for the changes below. Include summary, motivation, testing, and risks. Keep it readable in under a minute.

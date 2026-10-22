@@ -1,6 +1,7 @@
 ---
 description: Summarize current changes for a human reader
 agent: plan
+subagent: true
 ---
 
 Summarize the current changes for a human reader. Keep it short and concrete. Use the diffs below.

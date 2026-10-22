@@ -16,5 +16,5 @@ Steps:
 1. If on main or there are uncommitted changes, stop and ask what to do.
 2. Draft a PR title and body from the diff above, then ask for approval before creating the PR.
 3. After creation, ask the user to review. Offer to run /review or show the PR diff. Wait for approval.
-4. If approved, ask before merging with gh pr merge. If merge succeeds, ask whether to delete the branch.
-5. If review fails or the user declines, offer rollback: close the PR and revert/reset as appropriate. Never force-push or delete branches without explicit approval.
+4. If approved, ask before merging with gh pr merge. If merge succeeds, leave the branch in place (branches are permanent per AGENTS.md).
+5. If review fails or the user declines, offer rollback: close the PR first. Revert or reset only as a last resort, and only after explicit approval. Never force-push or delete branches.
