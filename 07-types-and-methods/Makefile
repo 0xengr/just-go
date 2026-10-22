@@ -7,7 +7,8 @@
 #
 #    make                    help (default)
 #    make list               list this chapter's topics
-#    make run <topic> [args]  go run ./<topic> [args], with the animated banner
+#    make run [topic]        run ./main.go (overview) if no topic, else a topic
+#                            under examples/, exercises/, or a nested path
 #    make new <topic>        scaffold <topic>/main.go
 #    make build              go build ./...
 #    make vet                go vet ./...
@@ -26,6 +27,8 @@ SHELL := /bin/sh
 # subfolder with a main.go is a runnable topic.
 CHAPTER := $(notdir $(CURDIR))
 TOPICS  := $(patsubst examples/%/main.go,%,$(wildcard examples/*/main.go))
+# Runnable packages live under examples/ or exercises/, including nested ones.
+RUNNABLES := $(sort $(patsubst %/main.go,%,$(shell find examples exercises -type f -name main.go 2>/dev/null)))
 
 # `make run defer-func` asks make for two goals: `run` and `defer-func`. The
 # catch-all rule at the bottom swallows the second one; here we read it back.
@@ -33,6 +36,51 @@ TOPICS  := $(patsubst examples/%/main.go,%,$(wildcard examples/*/main.go))
 # `make run greet Ada` runs `go run ./greet Ada`.
 TOPIC := $(word 2,$(MAKECMDGOALS))
 ARGS  := $(wordlist 3,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+
+# What `make run` executes: a topic under examples/, exercises/, or a direct
+# relative path; or the chapter's root main.go (the overview) when no topic /
+# a reserved name is given.
+RUN_TARGET :=
+RUN_LABEL :=
+ifneq ($(TOPIC),)
+  ifneq ($(wildcard $(TOPIC)/main.go),)
+    RUN_TARGET := ./$(TOPIC)
+    RUN_LABEL := $(TOPIC)
+  endif
+  ifeq ($(RUN_TARGET),)
+    ifneq ($(wildcard examples/$(TOPIC)/main.go),)
+      RUN_TARGET := ./examples/$(TOPIC)
+      RUN_LABEL := $(TOPIC)
+    endif
+  endif
+  ifeq ($(RUN_TARGET),)
+    ifneq ($(wildcard exercises/$(TOPIC)/main.go),)
+      RUN_TARGET := ./exercises/$(TOPIC)
+      RUN_LABEL := $(TOPIC)
+    endif
+  endif
+  ifeq ($(RUN_TARGET),)
+    ifneq ($(filter main root overview .,$(TOPIC)),)
+      ifneq ($(wildcard main.go),)
+        RUN_TARGET := .
+        RUN_LABEL := main.go
+      endif
+    endif
+  endif
+else
+  ifneq ($(wildcard main.go),)
+    RUN_TARGET := .
+    RUN_LABEL := main.go
+  endif
+endif
+
+# New topic scaffolding defaults to examples/ unless an examples/ or exercises/
+# prefix is given explicitly.
+ifeq ($(filter examples/% exercises/%,$(TOPIC)),)
+  NEW_PATH := examples/$(TOPIC)
+else
+  NEW_PATH := $(TOPIC)
+endif
 
 # --- ANSI colours -----------------------------------------------------------
 C_RESET   := \033[0m
@@ -48,7 +96,7 @@ C_RED     := \033[38;5;203m
 
 ANIM ?= 1
 
-.PHONY: help list run new build vet test fmt fmt-check check tidy $(TOPICS)
+.PHONY: help list run new build vet test fmt fmt-check check tidy $(TOPICS) $(RUNNABLES)
 
 # --- help (default) ---------------------------------------------------------
 help:
@@ -60,8 +108,8 @@ help:
 	  '$(C_DIM)' '$(C_RESET)'
 	@printf '  %bchapter%b  %s\n\n' '$(C_BOLD)' '$(C_RESET)' '$(CHAPTER)'
 	@printf '  %busage%b    make <target> [topic]\n\n' '$(C_BOLD)' '$(C_RESET)'
-	@printf '    %brun%b <topic> [args]   go run ./examples/<topic> [args] with the banner\n' '$(C_GREEN)' '$(C_RESET)'
-	@printf '    %bnew%b <topic>   scaffold <topic>/main.go\n' '$(C_GREEN)' '$(C_RESET)'
+	@printf '    %brun%b [topic]   run ./main.go (overview) if no topic, else a topic under examples/, exercises/, or a nested path\n' '$(C_GREEN)' '$(C_RESET)'
+	@printf '    %bnew%b <topic>   scaffold <topic>/main.go (defaults to examples/)\n' '$(C_GREEN)' '$(C_RESET)'
 	@printf '    %blist%b          list topics in this chapter\n' '$(C_GREEN)' '$(C_RESET)'
 	@printf '    %bbuild%b         go build ./...\n' '$(C_GREEN)' '$(C_RESET)'
 	@printf '    %bvet%b           go vet ./...\n' '$(C_GREEN)' '$(C_RESET)'
@@ -73,21 +121,25 @@ help:
 
 # --- list topics ------------------------------------------------------------
 list:
-	@printf '  %btopics in %s%b\n' '$(C_BOLD)' '$(CHAPTER)' '$(C_RESET)'
-	@for t in $(TOPICS); do \
-	  printf '    %b·%b %s\n' '$(C_GREEN)' '$(C_RESET)' "$$t"; \
+	@printf '  %btopics in %s%b\n\n' '$(C_BOLD)' '$(CHAPTER)' '$(C_RESET)'
+	@printf '  %bexamples%b\n' '$(C_BOLD)' '$(C_RESET)'
+	@for t in $(RUNNABLES); do \
+	  case "$$t" in examples/*) printf '    %s\n' "$$t";; esac; \
+	done
+	@printf '  %bexercises%b\n' '$(C_BOLD)' '$(C_RESET)'
+	@for t in $(RUNNABLES); do \
+	  case "$$t" in exercises/*) printf '    %s\n' "$$t";; esac; \
 	done
 	@printf '\n'
 
-# --- run one topic ----------------------------------------------------------
+# --- run one topic (or the overview) ---------------------------------------
 run:
-	@if [ -z "$(TOPIC)" ]; then \
-	  printf '  %bno topic given%b — try: make run <topic>\n\n' '$(C_RED)' '$(C_RESET)'; \
-	  $(MAKE) --no-print-directory list; \
-	  exit 1; \
-	fi
-	@if [ ! -f "examples/$(TOPIC)/main.go" ]; then \
-	  printf '  %bunknown topic:%b %s\n\n' '$(C_RED)' '$(C_RESET)' '$(TOPIC)'; \
+	@if [ -z "$(RUN_TARGET)" ]; then \
+	  if [ -z "$(TOPIC)" ]; then \
+	    printf '  %bno topic given%b — try: make run <topic> (overview needs a root main.go)\n\n' '$(C_RED)' '$(C_RESET)'; \
+	  else \
+	    printf '  %bunknown topic:%b %s\n\n' '$(C_RED)' '$(C_RESET)' '$(TOPIC)'; \
+	  fi; \
 	  $(MAKE) --no-print-directory list; \
 	  exit 1; \
 	fi
@@ -108,17 +160,17 @@ run:
 	    '$(C_VIOLET)' '$(C_RESET)' '$(C_MAGENTA)' '$(C_RESET)' \
 	    '$(C_YELLOW)' '$(C_RESET)' '$(C_GREEN)' '$(C_RESET)'; \
 	fi
-	@printf '  %bIn chapter %s · running%b %b./examples/%s%b\n\n' \
-	  '$(C_DIM)' '$(CHAPTER)' '$(C_RESET)' '$(C_CYAN)' '$(TOPIC)' '$(C_RESET)'
+	@printf '  %bIn chapter %s · running%b %b%s%b\n\n' \
+	  '$(C_DIM)' '$(CHAPTER)' '$(C_RESET)' '$(C_CYAN)' '$(RUN_TARGET)' '$(C_RESET)'
 	@if [ "$(ANIM)" = "1" ]; then \
 	  for f in '⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧'; do \
-	    printf '\r  %s warming up ./%s …' "$$f" '$(TOPIC)'; \
+	    printf '\r  %s warming up %s …' "$$f" '$(RUN_TARGET)'; \
 	    sleep 0.05; \
 	  done; \
 	  printf '\r\033[K'; \
 	fi
-	@go run ./examples/$(TOPIC) $(ARGS) && printf '\n  %b✓ done%b\n' '$(C_GREEN)' '$(C_RESET)' \
-	  || { printf '\n  %b✗ go run ./examples/%s failed%b\n' '$(C_RED)' '$(TOPIC)' '$(C_RESET)'; exit 1; }
+	@go run $(RUN_TARGET) $(ARGS) && printf '\n  %b✓ done%b\n' '$(C_GREEN)' '$(C_RESET)' \
+	  || { printf '\n  %b✗ go run %s failed%b\n' '$(C_RED)' '$(RUN_TARGET)' '$(C_RESET)'; exit 1; }
 
 # --- scaffold a new topic ---------------------------------------------------
 new:
@@ -126,15 +178,15 @@ new:
 	  printf '  %bno name given%b — try: make new <topic>\n' '$(C_RED)' '$(C_RESET)'; \
 	  exit 1; \
 	fi
-	@if [ -e "examples/$(TOPIC)" ]; then \
-	  printf '  %b%s already exists%b\n' '$(C_RED)' '$(TOPIC)' '$(C_RESET)'; \
+	@if [ -e "$(NEW_PATH)" ]; then \
+	  printf '  %b%s already exists%b\n' '$(C_RED)' '$(NEW_PATH)' '$(C_RESET)'; \
 	  exit 1; \
 	fi
-	@mkdir -p "examples/$(TOPIC)"
-	@printf 'package main\n\nimport "fmt"\n\n// NOTE: what this example shows\nfunc main() {\n\tfmt.Println("%s")\n}\n' '$(TOPIC)' > "examples/$(TOPIC)/main.go"
-	@gofmt -w "examples/$(TOPIC)/main.go"
+	@mkdir -p "$(NEW_PATH)"
+	@printf 'package main\n\nimport "fmt"\n\n// NOTE: what this example shows\nfunc main() {\n\tfmt.Println("%s")\n}\n' '$(TOPIC)' > "$(NEW_PATH)/main.go"
+	@gofmt -w "$(NEW_PATH)/main.go"
 	@printf '  %b✓%b created %s/main.go — run it with: make run %s\n' \
-	  '$(C_GREEN)' '$(C_RESET)' '$(TOPIC)' '$(TOPIC)'
+	  '$(C_GREEN)' '$(C_RESET)' '$(NEW_PATH)' '$(NEW_PATH)'
 
 # --- checks and chores ------------------------------------------------------
 build:
@@ -175,6 +227,19 @@ $(TOPICS):
 	    '$(C_DIM)' '$@' '$(C_RESET)' '$@'; \
 	  exit 1; \
 	fi
+	@:
+endif
+
+# Same treatment for runnable paths under examples/ and exercises/, including
+# nested ones, so make does not mistake them for files or directories.
+ifneq ($(RUNNABLES),)
+$(RUNNABLES):
+	@if [ "$(MAKECMDGOALS)" = "$@" ]; then \
+	  printf '  %b%s is a topic, not a target%b — try: make run %s\n' \
+	    '$(C_DIM)' '$@' '$(C_RESET)' '$@'; \
+	  exit 1; \
+	fi
+	@:
 endif
 
 # Swallow `make run defer-func`'s stray second goal, but still complain when an
@@ -184,3 +249,4 @@ endif
 	  printf '  %bunknown target:%b %s — try: make help\n' '$(C_RED)' '$(C_RESET)' '$@'; \
 	  exit 1; \
 	fi
+	@:
