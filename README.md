@@ -9,9 +9,9 @@ I come back to the code.
 
 Each `NN-slug/` is a self-contained module that can be read on its own.
 
-> **Status:** a beginner guide covering core Go topics through types and
-> methods (environment, predeclared types, composite types, blocks/control,
-> functions, pointers, types & methods). Advanced topics are not covered yet —
+> **Status:** a beginner guide covering core Go topics through interfaces
+> (environment, predeclared types, composite types, blocks/control, functions,
+> pointers, types & methods, interfaces). Advanced topics are not covered yet —
 > add them as new chapters following the same layout. Fixes and typos are
 > welcome; see "Contributing" below.
 
@@ -66,9 +66,9 @@ NN-slug/
   version.
 - Every topic is its own `package main`: run it with `go run ./examples/01-topic` or
   `make -C NN-slug run 01-topic`.
-- The chapter `README.md` is the notes: read it after running the code.
-- Exercises at the end of each README are for you to try before peeking at the
-  collapsible solution.
+- The chapter `README.md` is the index; the full notes live in `notes.md`.
+- Exercises live under `exercises/`; the chapter `README.md` lists each one with
+  the topics it solves.
 
 ## How to run examples
 
@@ -88,7 +88,7 @@ Reference notes: `fmt-printing.md` — all 12 `fmt` print functions + verbs.
 
 ## Layout
 
-43 runnable topics across 7 chapters. `Start here` runs the first topic in
+47 runnable topics across 8 chapters. `Start here` runs the first topic in
 reading order; the chapter `README.md` has the full run-order table.
 
 | Dir                          | Chapter                              | Topics | Start here                                          | You'll learn |
@@ -100,6 +100,7 @@ reading order; the chapter `README.md` has the full run-order table.
 | `05-functions/`              | Functions, closures & `defer`        |    5 | `make -C 05-functions run 01-multiple-returns`      | multiple returns, variadic, closures, defer |
 | `06-pointers/`               | Pointers, nil, `new()` & call by value |  6 | `make -C 06-pointers run 01-call-by-value`          | pointers, mutability, map/slice diffs, perf |
 | `07-types-and-methods/`      | Types and methods (types + methods)  |  4 | `make -C 07-types-and-methods run 01-user-defined-types` | defined types, methods, receivers, embedding |
+| `08-interfaces/`             | Interfaces: duck typing, APIs & type switches |  4 | `make -C 08-interfaces run 01-duck-typing`          | interfaces, implicit satisfaction, polymorphism, API design, type switches |
 
 Each chapter is its own Go module (`go.mod` naming `github.com/0xengr/just-go/<slug>`)
 with its own overview `main.go` and `README.md`; there is no root module and no
@@ -112,10 +113,9 @@ the curriculum, not a version.
 
 ## Not yet covered
 
-These topics are not in the repo yet; add them as new chapters (`08-...`,
-`09-...`, …) following the existing layout:
+These topics are not in the repo yet; add them as new chapters (`09-...`,
+`10-...`, …) following the existing layout:
 
-- Interfaces
 - Generics
 - Errors (sentinels, wrapping, panic/recover)
 - Modules, packages, imports
@@ -214,9 +214,9 @@ terms used across the chapters.
 
 ## Contributing
 
-This repo is a beginner guide covering core Go topics through types and methods. Contributions
+This repo is a beginner guide covering core Go topics through interfaces. Contributions
 that fix typos, correct facts or output, improve notes, or add the missing
-chapters (8–16) following the existing layout are welcome. Please keep each
+chapters (9–16) following the existing layout are welcome. Please keep each
 chapter a self-contained module with the shared `Makefile`, run `make check`
 before submitting, and open a PR rather than pushing to `main`.
 

@@ -27,8 +27,9 @@ func (p person) speak() string {
 	return "Hi my name is: " + p.name
 }
 
-// NOTE: Now understand how interfaces help us.
-// Assume you want to print all three of these `speak` funcs, so without an interface, do it like this:
+// NOTE: Now see how interfaces help us.
+// Suppose you want to print all three of these `speak` methods; without an
+// interface, you would do it like this:
 func catSpeak(c cat) {
 	fmt.Println(c.speak())
 }
@@ -39,11 +40,11 @@ func personSpeak(p person) {
 	fmt.Println(p.speak())
 }
 
-// NOTE: Understand the problem here.
+// NOTE: The problem here.
 // * All structs have the `speak` method.
-// * To use the `speak` method, we created 3 separate funcs, one for each type.
-// * But an interface can make this better, because all three are
-// * implementing the `speaker` interface, so we can leverage it like this
+// * To use it, we created three separate functions, one for each type.
+// * But an interface can make this better: all three implement the
+// * `speaker` interface, so we can leverage it like this.
 
 func speaking(s speaker) {
 	fmt.Println(s.speak())
@@ -68,7 +69,7 @@ func main() {
 	dogSpeak(d)    // woof woof
 	personSpeak(p) // Hi my name is: John Doe
 
-	// Now use the interface method here to make it better and easier
+	// NOTE: Now use the interface method here to make it better and easier.
 	speaking(c)
 	speaking(d)
 	speaking(p)
