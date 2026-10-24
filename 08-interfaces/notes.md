@@ -77,7 +77,7 @@ Beginner trap: an interface is not a base class. `cat` does not inherit from
 `speaker`, and an interface value exposes only the interface's methods — `s.name`
 does not compile until you assert the concrete type.
 
-## 2. Duck typing: satisfaction is implicit (`examples/duck-typing/`)
+## 2. Duck typing: satisfaction is implicit (`examples/01-duck-typing/`)
 
 Plain English: duck typing means the compiler cares about what a value can do,
 not what it is called. If it has `Quack()`, it quacks. Go checks this
@@ -101,7 +101,7 @@ func (d RealDuck) Quack()  { fmt.Println("RealDuck: Quack, Quack, Quack") }
 func (t ToyDuck) Quack()   { fmt.Println("ToyDuck: Quack, Quack, Quack") }
 func (r RobotDuck) Quack() { fmt.Println("RobotDuck: Quack, Quack, Quack") }
 
-// using the Quacker interface: any value with a Quack method works here
+// NOTE: Using the Quacker interface: any value with a Quack method works here.
 func MakeItQuack(q Quacker) {
 	q.Quack()
 }
@@ -145,7 +145,10 @@ Beginner trap: a method must match the name and signature exactly. Also watch
 the receiver: if `Quack` were declared with `func (d *RealDuck) Quack()`, then
 only `&RealDuck{}` would satisfy `Quacker`, and `RealDuck{}` would not.
 
-## 3. Polymorphism: one function, many types (`examples/polymorphism/`)
+The folder also contains `duck-typing.js`, the same idea in JavaScript, for
+comparison; it is not part of the Go build.
+
+## 3. Polymorphism: one function, many types (`examples/02-polymorphism/`)
 
 Plain English: polymorphism is the ability to appear in different forms. A
 `Shape` can be a circle, a rectangle, or a square, and code written against
@@ -214,7 +217,7 @@ in the value type's method set, so `var s Shape = Circle{}` fails when `Area` is
 declared on `*Circle`. Pick value or pointer receivers once per type and keep
 them consistent.
 
-## 4. API design: accept interfaces, return concrete types (`examples/interface-api-design/`)
+## 4. API design: accept interfaces, return concrete types (`examples/03-interface-api-design/`)
 
 Plain English: a function should ask for the least it needs and give back the
 most useful result. `loadPerson` needs bytes to decode, so it accepts
@@ -294,7 +297,7 @@ Beginner trap: "accept interfaces" does not mean every parameter should be an
 interface. Accept the narrowest behavior you actually call — here, reading
 bytes. If a function needs a `Person`, take a `Person`.
 
-## 5. Type switches: recovering the concrete type (`examples/type-assertion-switches/`)
+## 5. Type switches: recovering the concrete type (`examples/04-type-assertion-switches/`)
 
 Plain English: a type switch asks which concrete type is stored in an interface
 value and runs the matching case. Inside a case, the variable has that concrete
@@ -361,7 +364,7 @@ Beginner trap: a type switch matches exact dynamic types, not underlying types,
 and it does not coerce anything. Forgetting `default` makes unknown types vanish
 silently; `case nil` is how you catch a nil interface.
 
-## 6. Interfaces in practice: `error` and `Notifier` (`exercises/notification-system/`)
+## 6. Interfaces in practice: `error` and `Notifier` (`exercises/01-notification-system/`)
 
 Plain English: the exercise builds the same feature twice. First with a
 `NotifyUser` function and a `switch` over a channel string; then with a
@@ -457,9 +460,9 @@ Beginner trap: ignoring a returned error, and assuming a `switch` without a
 
 ## Exercises
 
-- `exercises/notification-system/` — the chapter's exercise. It builds the same
+- `exercises/01-notification-system/` — the chapter's exercise. It builds the same
   notifier twice, with a `switch` and with an interface, and shows an `error`
-  return. Run it with `go run ./exercises/notification-system`; the `"random"`
+  return. Run it with `go run ./exercises/01-notification-system`; the `"random"`
   call prints nothing because the `switch` has no `default`.
 
 Things to try:

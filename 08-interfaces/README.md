@@ -15,13 +15,14 @@ Go gets polymorphism without inheritance.
 | Order | Run it | What it teaches you |
 | ----- | ------ | ------------------- |
 | 1 | `go run .` | Interfaces as a set of methods, interface parameters, variadic interfaces |
-| 2 | `go run ./examples/duck-typing` | Implicit satisfaction with a single method |
-| 3 | `go run ./examples/polymorphism` | One interface-typed function replacing three concrete ones |
-| 4 | `go run ./examples/interface-api-design` | Accepting `io.Reader` instead of a string, and returning a concrete type |
-| 5 | `go run ./examples/type-assertion-switches` | Recovering concrete event types with a type switch |
-| 6 | `go run ./exercises/notification-system` | Exercise: switch dispatch vs interface dispatch, plus `error` returns |
+| 2 | `go run ./examples/01-duck-typing` | Implicit satisfaction with a single method |
+| 3 | `go run ./examples/02-polymorphism` | One interface-typed function replacing three concrete ones |
+| 4 | `go run ./examples/03-interface-api-design` | Accepting `io.Reader` instead of a string, and returning a concrete type |
+| 5 | `go run ./examples/04-type-assertion-switches` | Recovering concrete event types with a type switch |
+| 6 | `go run ./exercises/01-notification-system` | Exercise: switch dispatch vs interface dispatch, plus `error` returns |
 
-The topic folders are not numbered; this table is the reading order.
+Topics are numbered folders (`01-`, `02-`, …) in reading order, so `ls` alone
+tells a newcomer where to begin. The numbers are the curriculum, not a version.
 
 ## Cheat sheet
 
@@ -43,6 +44,6 @@ Full chapter notes live in [notes.md](./notes.md).
 
 ## Exercises
 
-- `exercises/notification-system` — Topics solved: interface declaration and
+- `exercises/01-notification-system` — Topics solved: interface declaration and
   satisfaction, interface parameters, `error` returns, switch vs interface
   dispatch.

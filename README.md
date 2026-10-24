@@ -99,7 +99,7 @@ reading order; the chapter `README.md` has the full run-order table.
 | `05-functions/`              | Functions, closures & `defer`        |    5 | `make -C 05-functions run 01-multiple-returns`      | multiple returns, variadic, closures, defer |
 | `06-pointers/`               | Pointers, nil, `new()` & call by value |  6 | `make -C 06-pointers run 01-call-by-value`          | pointers, mutability, map/slice diffs, perf |
 | `07-types-and-methods/`      | Types and methods (types + methods)  |  4 | `make -C 07-types-and-methods run 01-user-defined-types` | defined types, methods, receivers, embedding |
-| `08-interfaces/`             | Interfaces: duck typing, APIs & type switches |  4 | `make -C 08-interfaces run duck-typing`             | interfaces, implicit satisfaction, polymorphism, API design, type switches |
+| `08-interfaces/`             | Interfaces: duck typing, APIs & type switches |  4 | `make -C 08-interfaces run 01-duck-typing`          | interfaces, implicit satisfaction, polymorphism, API design, type switches |
 
 Each chapter is its own Go module (`go.mod` naming `github.com/0xengr/just-go/<slug>`)
 with its own overview `main.go` and `README.md`; there is no root module and no
