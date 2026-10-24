@@ -2,12 +2,14 @@ package main
 
 import "fmt"
 
-// NOTE: DUCK TYPING
-// * Duck typing takes its name from a test in computer science. It says:
-// * If it looks like a duck, swims like a duck, and quacks like a duck, then it might as well be a duck.
-// * In Go there is no "implements" keyword: a type satisfies an interface by having its methods.
+// NOTE: Duck typing
+// * Duck typing takes its name from the duck test:
+// * if it looks like a duck, swims like a duck, and quacks like a duck,
+// * then it probably is a duck.
+// * In Go there is no "implements" keyword: a type satisfies an interface by
+// * having its methods.
 
-// Let's understand with an example.
+// NOTE: Let's understand with an example.
 
 type Quacker interface {
 	Quack()
@@ -27,7 +29,7 @@ func (r RobotDuck) Quack() {
 	fmt.Println("RobotDuck: Quack, Quack, Quack")
 }
 
-// using the Quacker interface: any value with a Quack method works here
+// NOTE: Using the Quacker interface: any value with a Quack method works here.
 func MakeItQuack(q Quacker) {
 	q.Quack()
 }
@@ -39,7 +41,7 @@ func makeItQuack(quack ...Quacker) {
 	}
 }
 
-// How this code uses duck typing:
+// NOTE: How this code uses duck typing:
 // None of RealDuck, ToyDuck, or RobotDuck says it implements Quacker.
 // Each only defines Quack(), which is enough for Go to treat it as a Quacker.
 // MakeItQuack and makeItQuack then accept any of them through the interface.
