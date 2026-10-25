@@ -6,7 +6,7 @@ import (
 )
 
 // NOTE: This program is similar to ./01-calculate-pay, but instead of
-// * returning an error, it panics.
+// * returning an error, it panics. Hours over 40 are paid at twice the rate.
 
 var (
 	ErrHourlyRate  = errors.New("invalid hourly rate")
@@ -27,10 +27,9 @@ func payDay(hoursWorked, hourlyRate int) int {
 	}
 
 	if hoursWorked > 40 {
-		hoursOver := hoursWorked - 40
-		overTime := hoursOver * 2
-		regularDay := hoursWorked * hourlyRate
-		return regularDay + overTime
+		regularPay := 40 * hourlyRate
+		overTime := (hoursWorked - 40) * hourlyRate * 2
+		return regularPay + overTime
 	}
 
 	return hoursWorked * hourlyRate

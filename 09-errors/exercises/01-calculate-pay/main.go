@@ -5,11 +5,12 @@ import (
 	"fmt"
 )
 
-// NOTE: The purpose of this program is to calculate the pay for the week.
+// NOTE: The purpose of this program is to calculate the week's pay. Hours over
+// * 40 are paid at twice the hourly rate.
 
 var (
-	ErrHourlyRate   = errors.New("invalid hourly rate")
-	ErrHourlyWorked = errors.New("invalid hours worked per week")
+	ErrHourlyRate  = errors.New("invalid hourly rate")
+	ErrHoursWorked = errors.New("invalid hours worked per week")
 )
 
 func payDay(hoursWorked, hourlyRate int) (int, error) {
@@ -17,17 +18,16 @@ func payDay(hoursWorked, hourlyRate int) (int, error) {
 		return 0, ErrHourlyRate
 	}
 	if hoursWorked < 0 || hoursWorked > 80 {
-		return 0, ErrHourlyWorked
+		return 0, ErrHoursWorked
 	}
 
 	if hoursWorked > 40 {
-		hoursOver := hoursWorked - 40
-		overTime := hoursOver * 2
-		regularPay := hoursWorked * hourlyRate
+		regularPay := 40 * hourlyRate
+		overTime := (hoursWorked - 40) * hourlyRate * 2
 		return regularPay + overTime, nil
 	}
 
-	return hoursWorked + hourlyRate, nil
+	return hoursWorked * hourlyRate, nil
 }
 
 func main() {

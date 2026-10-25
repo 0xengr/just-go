@@ -14,21 +14,11 @@ import "fmt"
 // * Go is case-sensitive: `println` is not `Println`, and `fmt.println` does
 // * not exist.
 
-// BUG: this line does not compile:
-// fmt.println("Enter your city:")
-// undefined: fmt.println (the package has Println, not println)
-
 // NOTE: Runtime errors appear while the program runs, not while it compiles.
 // * Reading past the end of a slice, dereferencing nil, dividing an integer
 // * by zero, or opening a missing file all fail during execution.
 // * Go reports most of these as a panic, which stops the program unless it is
 // * recovered.
-
-// BUG: this loop reads past the end of nums and panics:
-// for i := 0; i <= 10; i++ {
-//     total += nums[i]
-// }
-// panic: runtime error: index out of range [4] with length 4
 
 // NOTE: Semantic errors compile and run, but the logic produces the wrong
 // * result. The compiler cannot catch them; tests and careful reading do.
@@ -51,17 +41,25 @@ func shouldTakeCar(km int) string {
 }
 
 func main() {
-	// NOTE: The syntax error above stays commented out, so this line must be
-	// * Println with a capital P; a syntax error would stop the build.
+	// BUG: uncommenting the next line does not compile:
+	// fmt.println("Enter your city:")
+	// undefined: fmt.println (the package has Println, not println)
 	fmt.Println("Enter your city:")
 
-	// NOTE: The runtime error above stays commented out, so this loop stops
-	// * at the end of the slice instead of panicking.
 	nums := []int{2, 4, 6, 8}
 	total := 0
 	for i := range nums {
 		total += nums[i]
 	}
+
+	// BUG: uncommenting this loop reads past the end of nums and panics:
+	// for i := 0; i <= 10; i++ {
+	//     total += nums[i]
+	// }
+	// panic: runtime error: index out of range [4] with length 4
+
+	// NOTE: The safe loop above stops at the end of the slice; the commented
+	// * one would keep going until index 4.
 	fmt.Println("Total:", total)
 
 	// NOTE: The semantic error runs quietly and prints the wrong answer.

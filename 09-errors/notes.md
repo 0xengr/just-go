@@ -71,16 +71,24 @@ Real world: a typo in a function name stops the build; indexing past the end of 
 slice crashes the run; an off-by-one boundary quietly gives the wrong answer.
 
 ```go
-// BUG: this line does not compile:
-// fmt.println("Enter your city:")
-// undefined: fmt.println (the package has Println, not println)
+func main() {
+	// BUG: uncommenting the next line does not compile:
+	// fmt.println("Enter your city:")
+	// undefined: fmt.println (the package has Println, not println)
+	fmt.Println("Enter your city:")
 
-// BUG: this loop reads past the end of nums and panics (add "fmt" to the
-// imports first):
-// for i := 0; i <= 10; i++ {
-//     total += nums[i]
-// }
-// panic: runtime error: index out of range [4] with length 4
+	nums := []int{2, 4, 6, 8}
+	total := 0
+	for i := range nums {
+		total += nums[i]
+	}
+
+	// BUG: uncommenting this loop reads past the end of nums and panics:
+	// for i := 0; i <= 10; i++ {
+	//     total += nums[i]
+	// }
+	// panic: runtime error: index out of range [4] with length 4
+}
 ```
 
 ```go
@@ -117,8 +125,9 @@ Points to notice:
   slice are `0` to `3`.
 - `shouldTakeCarBuggy` uses `> 2`, so exactly 2 km falls through to walking even
   though the intended rule is "2 km or more, take the car".
-- The failing lines stay commented out so the example builds and runs. That is
-  also why they are tagged `BUG:` — they panic or do not compile if restored.
+- Both failing snippets sit inside `main`, after the values they use are
+  declared, so uncommenting one reproduces the compiler error or the panic. They
+  stay commented out so the example builds and runs.
 - `for i := range nums` is the safe walk: it stops at the slice's length by
   construction, so no bound check can fail.
 
@@ -199,15 +208,15 @@ var (
 )
 
 func main() {
-	ErrBadData := errors.New("some bad data")
-	fmt.Printf("ErrBadData Type %T\n", ErrBadData) // *errors.errorString
+	errBadData := errors.New("some bad data")
+	fmt.Printf("errBadData type: %T\n", errBadData) // *errors.errorString
 }
 ```
 
 Output:
 
 ```text
-ErrBadData Type *errors.errorString
+errBadData type: *errors.errorString
 ```
 
 Points to notice:
@@ -374,8 +383,8 @@ one of them instead of crashing.
 
 ```go
 var (
-	ErrHourlyRate   = errors.New("invalid hourly rate")
-	ErrHourlyWorked = errors.New("invalid hours worked per week")
+	ErrHourlyRate  = errors.New("invalid hourly rate")
+	ErrHoursWorked = errors.New("invalid hours worked per week")
 )
 
 func payDay(hoursWorked, hourlyRate int) (int, error) {
@@ -383,7 +392,7 @@ func payDay(hoursWorked, hourlyRate int) (int, error) {
 		return 0, ErrHourlyRate
 	}
 	if hoursWorked < 0 || hoursWorked > 80 {
-		return 0, ErrHourlyWorked
+		return 0, ErrHoursWorked
 	}
 	// ... pay calculation
 }
@@ -394,18 +403,18 @@ Output:
 ```text
 invalid hours worked per week
 invalid hourly rate
-4080
+6000
 ```
 
 Points to notice:
 
 - The first call has 81 hours, so it fails the hours check. The second call has
   an hourly rate of 5, so it fails the rate check. The third call is valid and
-  returns a pay value.
+  returns 6000: 40 hours at 50 plus 40 overtime hours at 2× 50.
 - Both failures use package-level values, so a caller could tell them apart
   without reading the message.
-- The exercise is about returning and checking errors; the pay arithmetic is not
-  the focus.
+- The arithmetic only runs after both checks pass, so an invalid rate or hours
+  value never reaches the pay calculation.
 
 **`exercises/02-calculate-pay-panic/`** builds the same function again, but this
 time the failures panic instead of returning.
@@ -432,7 +441,7 @@ Output with the values in `main` (`payDay(70, 10)`):
 ```text
 HourlyRate: 10
 HoursWorked: 70
-760
+1000
 ```
 
 Points to notice:

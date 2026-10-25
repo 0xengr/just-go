@@ -27,8 +27,8 @@ var (
 func main() {
 
 	// Example: creating custom error values
-	ErrBadData := errors.New("some bad data")
-	fmt.Printf("ErrBadData Type %T\n", ErrBadData) // *errors.errorString
+	errBadData := errors.New("some bad data")
+	fmt.Printf("errBadData type: %T\n", errBadData) // *errors.errorString
 }
 
 // NOTE: Visit ./exercises/01-calculate-pay for a real use case of error values.

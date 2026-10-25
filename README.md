@@ -217,7 +217,7 @@ terms used across the chapters.
 
 This repo is a beginner guide covering core Go topics through errors. Contributions
 that fix typos, correct facts or output, improve notes, or add the missing
-chapters (10–16) following the existing layout are welcome. Please keep each
+chapters (10–18) following the existing layout are welcome. Please keep each
 chapter a self-contained module with the shared `Makefile`, run `make check`
 before submitting, and open a PR rather than pushing to `main`.
 
