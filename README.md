@@ -9,9 +9,9 @@ I come back to the code.
 
 Each `NN-slug/` is a self-contained module that can be read on its own.
 
-> **Status:** a beginner guide covering core Go topics through interfaces
+> **Status:** a beginner guide covering core Go topics through errors
 > (environment, predeclared types, composite types, blocks/control, functions,
-> pointers, types & methods, interfaces). Advanced topics are not covered yet —
+> pointers, types & methods, interfaces, errors). Advanced topics are not covered yet —
 > add them as new chapters following the same layout. Fixes and typos are
 > welcome; see "Contributing" below.
 
@@ -88,7 +88,7 @@ Reference notes: `fmt-printing.md` — all 12 `fmt` print functions + verbs.
 
 ## Layout
 
-47 runnable topics across 8 chapters. `Start here` runs the first topic in
+52 runnable topics across 9 chapters. `Start here` runs the first topic in
 reading order; the chapter `README.md` has the full run-order table.
 
 | Dir                          | Chapter                              | Topics | Start here                                          | You'll learn |
@@ -101,6 +101,7 @@ reading order; the chapter `README.md` has the full run-order table.
 | `06-pointers/`               | Pointers, nil, `new()` & call by value |  6 | `make -C 06-pointers run 01-call-by-value`          | pointers, mutability, map/slice diffs, perf |
 | `07-types-and-methods/`      | Types and methods (types + methods)  |  4 | `make -C 07-types-and-methods run 01-user-defined-types` | defined types, methods, receivers, embedding |
 | `08-interfaces/`             | Interfaces: duck typing, APIs & type switches |  4 | `make -C 08-interfaces run 01-duck-typing`          | interfaces, implicit satisfaction, polymorphism, API design, type switches |
+| `09-errors/`                 | Errors: values, panic & cleanup      |    5 | `make -C 09-errors run 01-error-kinds`              | error values, error kinds, sentinels, panic, defer |
 
 Each chapter is its own Go module (`go.mod` naming `github.com/0xengr/just-go/<slug>`)
 with its own overview `main.go` and `README.md`; there is no root module and no
@@ -113,11 +114,11 @@ the curriculum, not a version.
 
 ## Not yet covered
 
-These topics are not in the repo yet; add them as new chapters (`09-...`,
-`10-...`, …) following the existing layout:
+These topics are not in the repo yet; add them as new chapters (`10-...`,
+`11-...`, …) following the existing layout:
 
 - Generics
-- Errors (sentinels, wrapping, panic/recover)
+- Advanced errors (wrapping, `errors.Is`/`errors.As`, `recover`)
 - Modules, packages, imports
 - Go tooling (goimports, linters, build tags, embed)
 - Concurrency (goroutines, channels, select)
@@ -214,9 +215,9 @@ terms used across the chapters.
 
 ## Contributing
 
-This repo is a beginner guide covering core Go topics through interfaces. Contributions
+This repo is a beginner guide covering core Go topics through errors. Contributions
 that fix typos, correct facts or output, improve notes, or add the missing
-chapters (9–16) following the existing layout are welcome. Please keep each
+chapters (10–18) following the existing layout are welcome. Please keep each
 chapter a self-contained module with the shared `Makefile`, run `make check`
 before submitting, and open a PR rather than pushing to `main`.
 
