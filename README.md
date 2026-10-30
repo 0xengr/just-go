@@ -88,7 +88,7 @@ Reference notes: `fmt-printing.md` — all 12 `fmt` print functions + verbs.
 
 ## Layout
 
-52 runnable topics across 9 chapters. `Start here` runs the first topic in
+54 runnable topics across 9 chapters. `Start here` runs the first topic in
 reading order; the chapter `README.md` has the full run-order table.
 
 | Dir                          | Chapter                              | Topics | Start here                                          | You'll learn |
@@ -101,7 +101,7 @@ reading order; the chapter `README.md` has the full run-order table.
 | `06-pointers/`               | Pointers, nil, `new()` & call by value |  6 | `make -C 06-pointers run 01-call-by-value`          | pointers, mutability, map/slice diffs, perf |
 | `07-types-and-methods/`      | Types and methods (types + methods)  |  4 | `make -C 07-types-and-methods run 01-user-defined-types` | defined types, methods, receivers, embedding |
 | `08-interfaces/`             | Interfaces: duck typing, APIs & type switches |  4 | `make -C 08-interfaces run 01-duck-typing`          | interfaces, implicit satisfaction, polymorphism, API design, type switches |
-| `09-errors/`                 | Errors: values, panic & cleanup      |    5 | `make -C 09-errors run 01-error-kinds`              | error values, error kinds, sentinels, panic, defer |
+| `09-errors/`                 | Errors: values, panic & recover      |    7 | `make -C 09-errors run 01-error-kinds`              | error values, error kinds, sentinels, panic, defer, recover |
 
 Each chapter is its own Go module (`go.mod` naming `github.com/0xengr/just-go/<slug>`)
 with its own overview `main.go` and `README.md`; there is no root module and no
@@ -118,7 +118,7 @@ These topics are not in the repo yet; add them as new chapters (`10-...`,
 `11-...`, …) following the existing layout:
 
 - Generics
-- Advanced errors (wrapping, `errors.Is`/`errors.As`, `recover`)
+- Advanced errors (wrapping, `errors.Is`/`errors.As`, `errors.Join`)
 - Modules, packages, imports
 - Go tooling (goimports, linters, build tags, embed)
 - Concurrency (goroutines, channels, select)

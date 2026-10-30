@@ -2,11 +2,13 @@
 
 The big idea: in Go an error is an ordinary value, not an exception. A function
 that can fail returns an `error` next to its result, and the caller checks it
-with `if err != nil`. Nothing is thrown and nothing is caught. The `error`
+with `if err != nil`. Nothing is thrown; a failure comes back as a value the
+caller checks. The `error`
 interface is tiny — any type with `Error() string` satisfies it — so packages
 report failures without agreeing on a concrete type. Panic is the escape hatch
 for unrecoverable problems, and `defer` is the code that still runs while a
-panic unwinds.
+panic unwinds. A deferred `recover` can stop a panic at a chosen boundary and
+let the program keep running.
 
 ## How to run
 
@@ -23,15 +25,28 @@ panic unwinds.
 | 4 | `go run ./examples/03-creating-error-values` | `errors.New` and package-level sentinel errors |
 | 5 | `go run ./examples/04-panic` | Panic from the developer and from the runtime |
 | 6 | `go run ./examples/05-defer-with-panic` | Deferred cleanup while a panic unwinds |
-| 7 | `go run ./exercises/01-calculate-pay` | Exercise: returning sentinel errors |
-| 8 | `go run ./exercises/02-calculate-pay-panic` | Exercise: panicking with the same errors |
-
-`examples/05-defer-with-panic` ends in a panic on purpose. Its non-zero exit
-status and stack trace are the lesson; the program is not broken.
+| 7 | `go run ./examples/06-panic-recover` | `recover` stops a panic inside a deferred function |
+| 8 | `go run ./examples/07-recover-http` | A recovery middleware that keeps an HTTP server alive |
+| 9 | `go run ./exercises/01-calculate-pay` | Exercise: returning sentinel errors |
+| 10 | `go run ./exercises/02-calculate-pay-panic` | Exercise: panicking with the same errors |
+| 11 | `go run ./exercises/03-recover-background-worker` | Exercise: one recovery boundary per job |
 
 `examples/04-panic` prints nothing as committed, because its panic calls are
 commented out to keep the chapter gate green. Uncomment one to see the crash
 (add `"fmt"` to the imports for the runtime loop).
+
+`examples/05-defer-with-panic` ends in a panic on purpose. Its non-zero exit
+status and stack trace are the lesson; the program is not broken.
+
+`examples/07-recover-http` starts a server on `:8080` and keeps running. Run it
+from the chapter root, then use a second terminal:
+
+```sh
+curl -i localhost:8080/health   # 200 OK
+curl -i localhost:8080/users    # 500, panic logged, server survives
+```
+
+Stop it with `Ctrl-C`.
 
 Topics are numbered folders (`01-`, `02-`, …) in reading order, so `ls` alone
 tells a newcomer where to begin. The numbers are the curriculum, not a version.
@@ -48,7 +63,9 @@ tells a newcomer where to begin. The numbers are the curriculum, not a version.
 | Compile-time check | `var _ error = (*MyError)(nil)` |
 | Print an error | `fmt.Println(err)` — calls `Error()` |
 | Stop the program | `panic("missing PORT")` |
+| Stop a panic | `if r := recover(); r != nil { ... }` inside `defer` |
 | Clean up on panic | `defer file.Close()` |
+| Log a panic with a stack | `log.Printf("%v\n%s", r, debug.Stack())` |
 | Exit with a status | `os.Exit(1)` |
 
 ## Notes
@@ -61,3 +78,5 @@ Full chapter notes live in [notes.md](./notes.md).
   validation, returning and checking errors.
 - `exercises/02-calculate-pay-panic` — Topics solved: `panic` with error values,
   deferred reporting while a panic unwinds.
+- `exercises/03-recover-background-worker` — Topics solved: `recover` per job,
+  logging a panic, keeping a worker loop alive.
