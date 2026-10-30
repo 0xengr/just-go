@@ -297,8 +297,8 @@ Points to notice:
   catch block at the top.
 - The panicking calls are commented out so `go run` exits cleanly. Uncomment
   them to observe the crash — the comments show the real output.
-- `recover` can stop a panic during unwinding, but it is not covered in this
-  chapter; it belongs with advanced error handling.
+- `recover` can stop a panic during unwinding. It only works from a deferred
+  function; section 7 shows how, and when not to use it.
 
 Beginner trap: using panic for ordinary failures such as a missing file or bad
 form input. Callers expect an error they can check, not a crashed process.
@@ -375,7 +375,161 @@ Beginner trap: `os.Exit` is the exception to the rule. It terminates the process
 immediately and skips deferred calls, so cleanup registered with `defer` does
 not run. Return from the function instead when cleanup matters.
 
-## 7. Exercises
+## 7. Recover (`examples/06-panic-recover/`)
+
+Plain English: `recover` stops a panic from propagating. It works only when
+called directly inside a deferred function while a panic is unwinding. It
+returns the panic value; if nothing is panicking, it returns `nil` and does
+nothing. When `recover` returns a non-nil value, the panic ends and the
+surrounding function returns normally to its caller.
+
+Real world: a server or a worker wants to contain a bug to one request or one
+job instead of letting the whole process die.
+
+```go
+func riskyOperation() {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered from panic:", r)
+		}
+	}()
+
+	fmt.Println("Operation started")
+	panic("something went wrong")
+}
+
+func main() {
+	fmt.Println("Before operation")
+	riskyOperation()
+	fmt.Println("After operation")
+}
+```
+
+Output:
+
+```text
+Before operation
+Operation started
+Recovered from panic: something went wrong
+After operation
+```
+
+Points to notice:
+
+- The deferred function runs during unwinding, before `riskyOperation` returns.
+  `After operation` prints because the panic never reached `main`.
+- `recover` must be called by the deferred function itself. Call a helper that
+  calls `recover` and it returns `nil`, so the panic keeps going.
+- The panic value is whatever was passed to `panic`. Here it is a string; an
+  `error` value works the same way and keeps its type.
+- Recover does not repair the cause. Every statement after the panic was
+  skipped, so the function returns with whatever values it had set. Only
+  recover when continuing is safe.
+
+Beginner trap: calling `recover` outside a deferred function. It returns `nil`
+and the panic continues, which makes the code look protected when it is not.
+
+## 8. A real recovery boundary (`examples/07-recover-http/`)
+
+Plain English: pick a boundary where a panic stops being fatal — one HTTP
+request, one background job, one goroutine. Below the boundary the code can be
+simple and let bugs panic; above it, a deferred `recover` logs the failure and
+the process keeps serving.
+
+Real world: an API handler hits a nil pointer. Without application-level
+recovery, `net/http` logs the panic and closes that connection with a generic
+response, and you get no chance to log in your format or return your own error
+body. With a middleware, that request gets a 500 with your message and the
+server keeps serving the next request.
+
+```go
+func recoveryMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if recovered := recover(); recovered != nil {
+				log.Printf("PANIC: %v\n%s", recovered, debug.Stack())
+				http.Error(w, "internal server error", http.StatusInternalServerError)
+			}
+		}()
+
+		next.ServeHTTP(w, r)
+	})
+}
+```
+
+`main` wraps the mux with the middleware and registers two routes:
+
+```go
+mux.HandleFunc("GET /users", userHandler)
+mux.HandleFunc("GET /health", healthHandler)
+
+addr := ":8080"
+log.Printf("server listening on %s", addr)
+if err := http.ListenAndServe(addr, recoveryMiddleware(mux)); err != nil {
+	log.Fatal(err)
+}
+```
+
+`userHandler` panics on purpose. Run the server from the chapter root, then
+call it from a second terminal:
+
+```text
+$ curl -i localhost:8080/health
+HTTP/1.1 200 OK
+Date: Fri, 30 Oct 2026 03:46:03 GMT
+Content-Length: 15
+Content-Type: text/plain; charset=utf-8
+
+API is healthy
+```
+
+```text
+$ curl -i localhost:8080/users
+HTTP/1.1 500 Internal Server Error
+Content-Type: text/plain; charset=utf-8
+X-Content-Type-Options: nosniff
+Date: Fri, 30 Oct 2026 03:46:03 GMT
+Content-Length: 22
+
+internal server error
+```
+
+The server's log has the evidence:
+
+```text
+2026/10/30 09:31:00 server listening on :8080
+Processing user request...
+2026/10/30 09:31:03 PANIC: unexpected nil pointer
+goroutine 19 [running]:
+runtime/debug.Stack()
+	.../runtime/debug/stack.go:26 +0x5e
+main.recoveryMiddleware.func1.1()
+	.../examples/07-recover-http/main.go:24 +0x45
+panic({0x91d1c8?, 0x6b1f40?})
+	.../runtime/panic.go:859 +0x125
+main.userHandler(...)
+	.../examples/07-recover-http/main.go:37 +0x58
+...
+```
+
+Points to notice:
+
+- The middleware registers its `defer` before calling `next.ServeHTTP`. The
+  handler sits deeper in the stack, so its panic unwinds through the
+  middleware's frame and stops there.
+- `debug.Stack()` captures the goroutine's stack at recovery time, which is what
+  you need to find the bug later.
+- `http.Error` sends the 500 because `userHandler` had not written a response
+  yet. If a handler panics after writing the header, the status is already sent
+  and `http.Error` can only append text.
+- The server stays up. Request `/health` after `/users` and it still answers.
+  That is containment, not a fix: the bug is logged, not repaired.
+- `net/http` already recovers panics per request on its own and logs them, so a
+  handler panic alone will not kill the server. The middleware exists to log in
+  your format and return your own error body.
+- The program blocks until `Ctrl-C`, because a server has no natural end.
+
+## 9. Exercises
 
 **`exercises/01-calculate-pay/`** turns the same idea into a small validation
 exercise. Two sentinel errors name the two failure modes, and `payDay` returns
@@ -453,6 +607,51 @@ Points to notice:
 - Change the arguments to `payDay(81, 50)` or `payDay(80, 5)` to see a panic.
   The report still prints first, then the panic message and stack trace appear.
 
+**`exercises/03-recover-background-worker/`** puts a recovery boundary around
+each job in a worker loop. `processJob` panics on the third job; `executeJob`
+recovers, logs the failure, and returns so the loop can continue.
+
+```go
+func executeJob(jobID int) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("job %d failed due to panic: %v", jobID, r)
+		}
+	}()
+
+	processJob(jobID)
+}
+```
+
+Output (the log timestamp reflects the run):
+
+```text
+processing job 0
+job 0 completed successfully
+processing job 1
+job 1 completed successfully
+processing job 2
+2026/10/30 09:31:03 job 2 failed due to panic: corrupted job data
+processing job 3
+job 3 completed successfully
+processing job 4
+job 4 completed successfully
+worker finished processing jobs
+```
+
+Points to notice:
+
+- The boundary sits inside the loop, so a failed job returns to `executeJob`'s
+  caller and the next iteration starts. `worker finished processing jobs` still
+  prints.
+- The lines job 2 printed before the panic stay; the "completed" line is
+  skipped because the panic ended the function.
+- `recover` only sees panics in its own goroutine. If each job ran in a
+  separate goroutine, this `defer` would not catch it; the goroutine would need
+  its own recovery boundary.
+- The log line is the only evidence of the failure. Without it the job would
+  disappear silently.
+
 ## Rules I want to remember
 
 - Errors are values. Return them last, use `nil` for success, and check
@@ -479,3 +678,8 @@ Points to notice:
 - Deferred calls run during a panic, in LIFO order, which makes `defer` reliable
   for cleanup.
 - `os.Exit` skips deferred calls. It is the exception to the cleanup rule.
+- `recover` stops a panic only when called directly inside a deferred function.
+  It returns the panic value, or `nil` when nothing is panicking.
+- Put recovery at a boundary — a request, a job, a goroutine — log the panic and
+  its stack trace, and keep going. It contains the failure; it does not fix it.
+- A panic in a goroutine can only be recovered inside that same goroutine.
