@@ -59,7 +59,7 @@ func main() {
 	// panic: runtime error: index out of range [4] with length 4
 
 	// NOTE: The safe loop above stops at the end of the slice; the commented
-	// * one would keep going until index 4.
+	// * one would keep going past the end and panic at index 4.
 	fmt.Println("Total:", total)
 
 	// NOTE: The semantic error runs quietly and prints the wrong answer.

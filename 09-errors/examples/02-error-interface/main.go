@@ -12,7 +12,7 @@ import "fmt"
 // * A type satisfies it implicitly; there is no "implements" keyword.
 // * If a type has an Error() string method, it is an error.
 
-// NOTE: Any struct with an Error method that returns a string implements
+// NOTE: Any type with an Error method that returns a string satisfies
 // * the error interface. A method with a pointer receiver belongs to the
 // * pointer's method set only, so *NetworkError is an error but the plain
 // * NetworkError value is not. That is why main passes &networkError.

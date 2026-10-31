@@ -45,13 +45,13 @@ func main() {
 // * in a separate goroutine, this defer would not see the panic; the worker
 // * goroutine itself would need the recovery boundary.
 //
-// Output (the log timestamp reflects the run):
+// output (the log timestamp reflects the run):
 // processing job 0
 // job 0 completed successfully
 // processing job 1
 // job 1 completed successfully
 // processing job 2
-// 2026/10/30 09:13:18 job 2 failed due to panic: corrupted job data
+// 2026/10/31 09:42:42 job 2 failed due to panic: corrupted job data
 // processing job 3
 // job 3 completed successfully
 // processing job 4

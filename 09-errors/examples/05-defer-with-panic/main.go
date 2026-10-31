@@ -19,7 +19,7 @@ func main() {
 
 	fmt.Println("BEFORE PANIC")
 
-	// readFile defers a close and then panics. Its deferred call runs
+	// NOTE: readFile defers a close and then panics. Its deferred call runs
 	// before the ones below because defers unwind LIFO across functions:
 	// the last defer registered is the first one to run.
 	readFile()

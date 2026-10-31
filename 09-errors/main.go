@@ -7,7 +7,7 @@ import (
 )
 
 // NOTE: Errors in Go
-// * Errors in Go are very different from other languages.
+// * Errors in Go are very different from those in other languages.
 // * In Go, errors are values, and you can handle them like any other value.
 // * There are no try/catch/finally blocks in Go like there are in JavaScript,
 // * Python, Ruby, and other languages.

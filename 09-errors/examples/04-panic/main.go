@@ -10,9 +10,9 @@ import (
 // * A panic is triggered by the developer or by the runtime.
 // * In Go, an unhandled error does not crash the program, but an unhandled
 // * panic does.
-// * Panic is used in rare cases, but it is useful in some scenarios.
+// * Panics are rare, but they are useful in some scenarios.
 
-// NOTE: We use panic based on the condition in our codebase.
+// NOTE: We panic based on the conditions in our own code.
 // * For example, we may write code to check environment variables and crash
 // * the program when one is missing.
 
@@ -49,10 +49,10 @@ func main() {
 	// 	/home/aman/Coding/golang/just-go/09-errors/examples/04-panic/main.go:38 +0xad
 	// exit status 2
 
-	// NOTE: In the crash above, 1 to 5 print before the panic because those
-	// * indexes are valid.
+	// NOTE: In the crash above, the values 1 to 5 print before the panic
+	// * because their indexes (0 to 4) are valid.
 
-	// BUG: uncommenting the next line panics when PORT or DATABASE_URL is
-	// unset:
+	// BUG: uncommenting the next line panics when either PORT or
+	// DATABASE_URL is unset:
 	// mustLoadEnv()
 }

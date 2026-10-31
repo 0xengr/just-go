@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// NOTE: In the standard library, the errors package has a function we can use
+// NOTE: The standard library's errors package has a function we can use
 // * to create errors.
 
 // NOTE: From the standard library source:
@@ -15,7 +15,7 @@ import (
 // 	return &errorString{text}
 // }
 
-// NOTE: Go's HTTP standard library uses errors.New to create error values.
+// NOTE: Go's standard library builds error values with errors.New as well.
 // * Here are a few real ones from net/http:
 var (
 	ErrBodyNotAllowed  = errors.New("http: request method or response status code does not allow body")
