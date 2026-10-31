@@ -27,9 +27,13 @@ let the program keep running.
 | 6 | `go run ./examples/05-defer-with-panic` | Deferred cleanup while a panic unwinds |
 | 7 | `go run ./examples/06-panic-recover` | `recover` stops a panic inside a deferred function |
 | 8 | `go run ./examples/07-recover-http` | A recovery middleware that keeps an HTTP server alive |
-| 9 | `go run ./exercises/01-calculate-pay` | Exercise: returning sentinel errors |
-| 10 | `go run ./exercises/02-calculate-pay-panic` | Exercise: panicking with the same errors |
-| 11 | `go run ./exercises/03-recover-background-worker` | Exercise: one recovery boundary per job |
+| 9 | `go run ./examples/08-error-wrapping` | Wrapping an error with `fmt.Errorf` and `%w` |
+| 10 | `go run ./examples/09-error-is` | Matching a wrapped error with `errors.Is` |
+| 11 | `go run ./examples/10-error-as` | Extracting a typed error from the chain with `errors.As` |
+| 12 | `go run ./exercises/01-calculate-pay` | Exercise: returning sentinel errors |
+| 13 | `go run ./exercises/02-calculate-pay-panic` | Exercise: panicking with the same errors |
+| 14 | `go run ./exercises/03-recover-background-worker` | Exercise: one recovery boundary per job |
+| 15 | `go run ./exercises/04-simulate-error-wrapping` | Exercise: wrapping an error across three layers |
 
 `examples/04-panic` prints nothing as committed, because its panic calls are
 commented out to keep the chapter gate green. Uncomment one to see the crash
@@ -62,6 +66,9 @@ tells a newcomer where to begin. The numbers are the curriculum, not a version.
 | Custom error type | `func (e *MyError) Error() string { ... }` |
 | Compile-time check | `var _ error = (*MyError)(nil)` |
 | Print an error | `fmt.Println(err)` — calls `Error()` |
+| Wrap an error | `fmt.Errorf("get user: %w", err)` |
+| Match through wrapping | `errors.Is(err, sql.ErrNoRows)` |
+| Extract a typed error | `var dbErr *DatabaseError; errors.As(err, &dbErr)` |
 | Stop the program | `panic("missing PORT")` |
 | Stop a panic | `if r := recover(); r != nil { ... }` inside `defer` |
 | Clean up on panic | `defer file.Close()` |
@@ -80,3 +87,5 @@ Full chapter notes live in [notes.md](./notes.md).
   deferred reporting while a panic unwinds.
 - `exercises/03-recover-background-worker` — Topics solved: `recover` per job,
   logging a panic, keeping a worker loop alive.
+- `exercises/04-simulate-error-wrapping` — Topics solved: `fmt.Errorf` with
+  `%w`, adding context across layers, reading the final wrapped message.

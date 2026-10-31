@@ -7,7 +7,8 @@ and there is no hidden jump to a `catch` block. The `error` interface is tiny �
 anything with `Error() string` is an error — so packages can report failures
 without sharing a concrete type. Panic exists too, but it is for bugs and
 impossible states, not for expected failures. `defer` is what still runs while a
-panic unwinds.
+panic unwinds. Failures can also chain: `fmt.Errorf` with `%w` wraps one error
+inside another, and `errors.Is` and `errors.As` read back through the chain.
 
 ## 1. Errors are values (`main.go`)
 
@@ -238,8 +239,8 @@ Points to notice:
   still shows the naming convention.
 
 Beginner trap: matching errors by their text. Strings change; sentinel values
-stay comparable. When errors get wrapped, plain `==` stops working too, and that
-is a later topic.
+stay comparable. When errors get wrapped, plain `==` stops working too, and
+section 10 shows why.
 
 ## 5. Panic (`examples/04-panic/`)
 
@@ -423,7 +424,7 @@ Points to notice:
 - The panic value is whatever was passed to `panic`. Here it is a string; an
   `error` value works the same way and keeps its type.
 - Recover does not repair the cause. Every statement after the panic was
-  skipped, so the function returns with whatever values it had set. Only
+  skipped, so the function returns with whatever values it has set. Only
   recover when continuing is safe.
 
 Beginner trap: calling `recover` outside a deferred function. It returns `nil`
@@ -438,8 +439,8 @@ the process keeps serving.
 
 Real world: an API handler hits a nil pointer. Without application-level
 recovery, `net/http` logs the panic and closes that connection with a generic
-response, and you get no chance to log in your format or return your own error
-body. With a middleware, that request gets a 500 with your message and the
+response, and you get no chance to log the panic in your own format or send
+your own error body. With a middleware, that request gets a 500 with your message and the
 server keeps serving the next request.
 
 ```go
@@ -476,7 +477,7 @@ call it from a second terminal:
 ```text
 $ curl -i localhost:8080/health
 HTTP/1.1 200 OK
-Date: Fri, 30 Oct 2026 03:46:03 GMT
+Date: Sat, 31 Oct 2026 03:57:52 GMT
 Content-Length: 15
 Content-Type: text/plain; charset=utf-8
 
@@ -488,7 +489,7 @@ $ curl -i localhost:8080/users
 HTTP/1.1 500 Internal Server Error
 Content-Type: text/plain; charset=utf-8
 X-Content-Type-Options: nosniff
-Date: Fri, 30 Oct 2026 03:46:03 GMT
+Date: Sat, 31 Oct 2026 03:57:52 GMT
 Content-Length: 22
 
 internal server error
@@ -497,18 +498,18 @@ internal server error
 The server's log has the evidence:
 
 ```text
-2026/10/30 09:31:00 server listening on :8080
+2026/10/31 09:42:51 server listening on :8080
 Processing user request...
-2026/10/30 09:31:03 PANIC: unexpected nil pointer
-goroutine 19 [running]:
+2026/10/31 09:42:52 PANIC: unexpected nil pointer
+goroutine 18 [running]:
 runtime/debug.Stack()
 	.../runtime/debug/stack.go:26 +0x5e
 main.recoveryMiddleware.func1.1()
-	.../examples/07-recover-http/main.go:24 +0x45
-panic({0x91d1c8?, 0x6b1f40?})
+	.../examples/07-recover-http/main.go:25 +0x45
+panic({0x91d248?, 0x6b1f40?})
 	.../runtime/panic.go:859 +0x125
 main.userHandler(...)
-	.../examples/07-recover-http/main.go:37 +0x58
+	.../examples/07-recover-http/main.go:38 +0x58
 ...
 ```
 
@@ -529,7 +530,202 @@ Points to notice:
   your format and return your own error body.
 - The program blocks until `Ctrl-C`, because a server has no natural end.
 
-## 9. Exercises
+## 9. Error wrapping (`examples/08-error-wrapping/`)
+
+Plain English: `fmt.Errorf` with the `%w` verb builds a new error that keeps
+the old one inside. The message lists the chain from the outside in: the outer
+layer's context first, then the original error. Without `%w`, formatting keeps
+only the text and the chain is lost.
+
+Real world: a request fails three functions deep. The repository knows the
+database refused the connection; the service knows which call it was making;
+the handler knows which resource it was serving. Each layer wraps the error it
+received, and the log line at the top tells the whole story.
+
+```go
+func getUsers() error {
+	err := errors.New("connection refused")
+
+	return fmt.Errorf("failed to get users: %w", err)
+}
+```
+
+Output:
+
+```text
+failed to get users: connection refused
+```
+
+Points to notice:
+
+- `%w` is the wrapping verb. `fmt.Errorf("failed to get users: %w", err)`
+  returns a new error value whose message is the prefix plus the old message,
+  and whose `Unwrap` method returns the inner error.
+- `%v` formats the same text but wraps nothing: the result no longer points at
+  the original value, so `errors.Is` cannot match it.
+- `errors.Unwrap(err)` peels one layer off and returns the inner error, or
+  `nil` when the error is not wrapped.
+- Wrapping is repeatable. Every layer that calls `fmt.Errorf` with `%w` adds
+  one link, and a chain is as deep as the call stack was.
+
+Beginner trap: wrapping with `%v` instead of `%w`. The log line looks right,
+but the chain is severed and matching by value or type stops working.
+
+## 10. Matching through wrapping (`examples/09-error-is/`)
+
+Plain English: `errors.Is(err, target)` reports whether the chain starting at
+`err` contains `target`. It unwraps one layer at a time and compares at every
+level, so a sentinel can be found no matter how many layers sit on top of it.
+Plain `==` compares exactly two values: once anything wraps `err`, `==` misses
+the sentinel and the check fails.
+
+Real world: the repository answers with `sql.ErrNoRows`; the service adds
+context with `fmt.Errorf` while bubbling up; the handler wraps again. Only the
+handler should decide "user not found", and only `errors.Is` can still read
+the database's answer through two layers.
+
+```go
+// 1. Repository layer
+func findUserByID(id int) error {
+	return fmt.Errorf("find user: %w", sql.ErrNoRows)
+}
+
+// 2. Service layer
+func getUser(id int) error {
+	err := findUserByID(id)
+	if err != nil {
+		return fmt.Errorf("get user: %w", err)
+	}
+	return nil
+}
+
+// 3. Handler layer
+func getUserHandler(id int) {
+	err := getUser(id)
+
+	// == misses the sentinel: both layers above wrapped the error, so this
+	// version would fall through and print "internal error: ..." instead.
+	// if err == sql.ErrNoRows {
+	// 	fmt.Println("user not found")
+	// 	return
+	// }
+	// fmt.Println("internal error:", err)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		fmt.Println("user not found")
+		return
+	}
+	fmt.Println("internal error:", err)
+}
+```
+
+The file keeps the wrong `==` version commented out so the misreport is
+visible next to the fix. A second pass repeats the idea with a local sentinel:
+the repository returns `ErrNotFound`, `service` wraps it, and `main` compares
+both ways:
+
+```go
+var ErrNotFound = errors.New("not found")
+
+err := service() // wraps ErrNotFound in "service failed: %w"
+
+fmt.Println(err == ErrNotFound)          // false
+fmt.Println(errors.Is(err, ErrNotFound)) // true
+```
+
+Output:
+
+```text
+user not found
+false
+true
+```
+
+Points to notice:
+
+- `errors.Is` walks the chain: compare, unwrap, compare again, until a match
+  or the end.
+- The `==` check compiles and runs; it is just wrong. The outermost wrapper is
+  a different value from `sql.ErrNoRows`, so the comparison is false and an
+  expected miss is reported as an internal error.
+- The second example shows the same pair with `ErrNotFound`: after one
+  wrapping layer, `==` prints `false` and `errors.Is` prints `true`.
+- The handler's reply stays honest because the match is on the sentinel value,
+  not on the wording: "user not found" for an expected miss, "internal error"
+  for a real bug.
+
+Beginner trap: reaching for `==` because the types line up. Identity after
+wrapping is the question, and `==` cannot answer it.
+
+## 11. Extracting a typed error (`examples/10-error-as/`)
+
+Plain English: `errors.As(err, &target)` searches the chain for the first
+error whose concrete type matches target's type and stores it in target.
+Where `errors.Is` asks "does the chain contain this value?", `errors.As` asks
+"does the chain contain a value of this type?" and hands it over.
+
+Real world: the database layer returns a custom `*DatabaseError` whose fields
+name the operation and the message. The chain gets wrapped on the way up, and
+the top of the stack needs those fields to shape its response.
+
+```go
+type DatabaseError struct {
+	Operation string
+	Message   string
+}
+
+func (e *DatabaseError) Error() string {
+	return e.Operation + ": " + e.Message
+}
+
+func queryDatabase() error {
+	dbErr := &DatabaseError{
+		Operation: "SELECT",
+		Message:   "connection timeout",
+	}
+	return fmt.Errorf("repository failed: %w", dbErr)
+}
+
+var dbErr *DatabaseError
+
+if errors.As(err, &dbErr) {
+	fmt.Println("Operation:", dbErr.Operation)
+	fmt.Println("Message:", dbErr.Message)
+}
+```
+
+Output:
+
+```text
+Operation: SELECT
+Message: connection timeout
+```
+
+Points to notice:
+
+- The target is a pointer to the type being searched for: `var dbErr
+  *DatabaseError`, then `errors.As(err, &dbErr)`.
+- `errors.As` unwraps like `errors.Is` but matches on type, so the wrapper's
+  "repository failed:" prefix is skipped and the typed error is filled in.
+- `Error()` has a pointer receiver here, so only `*DatabaseError` satisfies
+  `error` (section 3) — that is why the target type carries the `*`.
+- After the match, the fields are ordinary struct fields: `dbErr.Operation`
+  and `dbErr.Message`.
+
+The two functions side by side:
+
+| Function | Purpose |
+| -------- | ------- |
+| `errors.Is` | Checks whether an error matches a specific error value |
+| `errors.As` | Finds an error of a particular type and extracts it |
+
+A useful rule: `errors.Is` for sentinel errors such as `sql.ErrNoRows`;
+`errors.As` for structured custom errors such as `*DatabaseError`.
+
+Beginner trap: passing the target without `&`. `errors.As` must receive a
+pointer; `errors.As(err, dbErr)` panics instead of returning false.
+
+## 12. Exercises
 
 **`exercises/01-calculate-pay/`** turns the same idea into a small validation
 exercise. Two sentinel errors name the two failure modes, and `payDay` returns
@@ -631,7 +827,7 @@ job 0 completed successfully
 processing job 1
 job 1 completed successfully
 processing job 2
-2026/10/30 09:31:03 job 2 failed due to panic: corrupted job data
+2026/10/31 09:42:42 job 2 failed due to panic: corrupted job data
 processing job 3
 job 3 completed successfully
 processing job 4
@@ -644,13 +840,47 @@ Points to notice:
 - The boundary sits inside the loop, so a failed job returns to `executeJob`'s
   caller and the next iteration starts. `worker finished processing jobs` still
   prints.
-- The lines job 2 printed before the panic stay; the "completed" line is
-  skipped because the panic ended the function.
+- The lines job 2 printed before the panic stay in the output; the
+  "completed" line is skipped because the panic ended the function.
 - `recover` only sees panics in its own goroutine. If each job ran in a
   separate goroutine, this `defer` would not catch it; the goroutine would need
   its own recovery boundary.
 - The log line is the only evidence of the failure. Without it the job would
   disappear silently.
+
+**`exercises/04-simulate-error-wrapping/`** runs `sql.ErrNoRows` through the
+same three layers — repository, service, handler — and prints the final chain.
+The exercise is to wrap with `%w` and then read the message back: every
+layer's context is in the line, outermost first, with the sentinel text last.
+
+```go
+func findUserByID(ID string) error {
+	// simulate a database query where the user is not found
+	err := sql.ErrNoRows
+
+	if err != nil {
+		return fmt.Errorf("find user by ID %s: %w", ID, err)
+	}
+	return nil
+}
+```
+
+Output:
+
+```text
+internal error: get user: find user by ID 123: sql: no rows in result set
+```
+
+Points to notice:
+
+- Reading right to left: `sql.ErrNoRows` is the cause, `find user by ID 123`
+  is the repository's context, `get user` is the service's context, and
+  `internal error:` is the handler's reporting prefix.
+- Nothing unwraps or matches here; the point is the shape of the message.
+  Section 10 adds the `errors.Is` check a real handler would use, and
+  section 11 adds the `errors.As` extraction for typed errors.
+- With `%v` in either layer, this line would look identical — which is why
+  `%w` is not optional: the text is the same, the chain is not.
 
 ## Rules I want to remember
 
@@ -683,3 +913,10 @@ Points to notice:
 - Put recovery at a boundary — a request, a job, a goroutine — log the panic and
   its stack trace, and keep going. It contains the failure; it does not fix it.
 - A panic in a goroutine can only be recovered inside that same goroutine.
+- `fmt.Errorf("...: %w", err)` wraps: context is added and the original error
+  stays reachable. `%v` keeps only the message.
+- `errors.Is` matches a specific error value anywhere in the chain; `==`
+  matches only the very value at hand.
+- `errors.As` finds the first error of a given type in the chain and stores it
+  in a pointer target.
+- Use `errors.Is` for sentinels and `errors.As` for typed errors with fields.
