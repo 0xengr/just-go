@@ -14,9 +14,10 @@ import (
 // * log the panic with a stack trace and return your own 500 response.
 
 // NOTE: recoveryMiddleware wraps a handler in a deferred recover.
-// * The defer is registered before the handler runs, so it is the last thing
-// * to run when the handler panics. It logs the panic value and stack trace,
-// * writes a 500 response, and swallows the panic so the server keeps serving.
+// * The defer is registered before the handler runs, so it is in place when
+// * a panic unwinds out of the handler. It logs the panic value and stack
+// * trace, writes a 500 response, and swallows the panic so the server keeps
+// * serving.
 func recoveryMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
