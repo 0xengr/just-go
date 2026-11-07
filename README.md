@@ -9,11 +9,11 @@ I come back to the code.
 
 Each `NN-slug/` is a self-contained module that can be read on its own.
 
-> **Status:** a beginner guide covering core Go topics through errors
+> **Status:** a beginner guide covering core Go topics through generics
 > (environment, predeclared types, composite types, blocks/control, functions,
-> pointers, types & methods, interfaces, errors). Advanced topics are not covered yet —
-> add them as new chapters following the same layout. Fixes and typos are
-> welcome; see "Contributing" below.
+> pointers, types & methods, interfaces, errors, generics). Advanced topics are
+> not covered yet — add them as new chapters following the same layout. Fixes
+> and typos are welcome; see "Contributing" below.
 
 ## Who this is for
 
@@ -88,7 +88,7 @@ Reference notes: `fmt-printing.md` — all 12 `fmt` print functions + verbs.
 
 ## Layout
 
-57 runnable topics across 9 chapters. `Start here` runs the first topic in
+67 runnable topics across 10 chapters. `Start here` runs the first topic in
 reading order; the chapter `README.md` has the full run-order table.
 
 | Dir                          | Chapter                              | Topics | Start here                                          | You'll learn |
@@ -102,6 +102,7 @@ reading order; the chapter `README.md` has the full run-order table.
 | `07-types-and-methods/`      | Types and methods (types + methods)  |  4 | `make -C 07-types-and-methods run 01-user-defined-types` | defined types, methods, receivers, embedding |
 | `08-interfaces/`             | Interfaces: duck typing, APIs & type switches |  4 | `make -C 08-interfaces run 01-duck-typing`          | interfaces, implicit satisfaction, polymorphism, API design, type switches |
 | `09-errors/`                 | Errors: values, wrapping, panic & recover |   10 | `make -C 09-errors run 01-error-kinds`              | error values, error kinds, sentinels, wrapping, `errors.Is`/`errors.As`, panic, defer, recover |
+| `10-generics/`               | Generics: type parameters & constraints |   10 | `make -C 10-generics run 01-type-constraints`       | type parameters, generic types, generic functions, constraints, type inference, type terms, interface constraints, `comparable`, stdlib generics |
 
 Each chapter is its own Go module (`go.mod` naming `github.com/0xengr/just-go/<slug>`)
 with its own overview `main.go` and `README.md`; there is no root module and no
@@ -114,10 +115,9 @@ the curriculum, not a version.
 
 ## Not yet covered
 
-These topics are not in the repo yet; add them as new chapters (`10-...`,
-`11-...`, …) following the existing layout:
+These topics are not in the repo yet; add them as new chapters (`11-...`,
+`12-...`, …) following the existing layout:
 
-- Generics
 - Advanced errors (`errors.Join`, multi-error handling)
 - Modules, packages, imports
 - Go tooling (goimports, linters, build tags, embed)
